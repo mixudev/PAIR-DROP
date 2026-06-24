@@ -10,7 +10,6 @@ import type {
   ActivityLog,
   ClipboardItem,
   Message,
-  Note,
   Room,
   RoomMember,
   SharedFile,
@@ -31,7 +30,6 @@ interface WorkspaceState {
   files: SharedFile[];
   messages: Message[];
   clipboardItems: ClipboardItem[];
-  notes: Note[];
   activities: ActivityLog[];
   connectionStatus: ConnectionStatus;
   activeSection: WorkspaceSectionId;
@@ -47,9 +45,6 @@ interface WorkspaceState {
   addMessage: (message: Message) => void;
   setClipboardItems: (items: ClipboardItem[]) => void;
   addClipboardItem: (item: ClipboardItem) => void;
-  setNotes: (notes: Note[]) => void;
-  updateNote: (note: Note) => void;
-  addNote: (note: Note) => void;
   setActivities: (activities: ActivityLog[]) => void;
   addActivity: (activity: ActivityLog) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
@@ -114,7 +109,6 @@ const initialWorkspace = {
   files: [] as SharedFile[],
   messages: [] as Message[],
   clipboardItems: [] as ClipboardItem[],
-  notes: [] as Note[],
   activities: [] as ActivityLog[],
   connectionStatus: "disconnected" as ConnectionStatus,
   activeSection: "files" as WorkspaceSectionId,
@@ -145,13 +139,6 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
     set((s) => ({
       clipboardItems: [item, ...s.clipboardItems].slice(0, 50),
     })),
-  setNotes: (notes) => set({ notes }),
-  updateNote: (note) =>
-    set((s) => ({
-      notes: s.notes.map((n) => (n.id === note.id ? note : n)),
-    })),
-  addNote: (note) =>
-    set((s) => ({ notes: [note, ...s.notes] })),
   setActivities: (activities) => set({ activities }),
   addActivity: (activity) =>
     set((s) => ({

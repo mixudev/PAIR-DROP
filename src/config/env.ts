@@ -15,7 +15,6 @@ export const env = {
   ).split(","),
   defaultRoomExpiryHours: Number(process.env.DEFAULT_ROOM_EXPIRY_HOURS ?? "24"),
   clipboardHistoryLimit: Number(process.env.CLIPBOARD_HISTORY_LIMIT ?? "50"),
-  notesAutosaveIntervalMs: Number(process.env.NOTES_AUTOSAVE_INTERVAL_MS ?? "3000"),
 } as const;
 
 export const maxFileSizeBytes = env.maxFileSizeMb * 1024 * 1024;

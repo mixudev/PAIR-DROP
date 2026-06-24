@@ -86,16 +86,6 @@ export interface ClipboardItem {
   created_at: string;
 }
 
-export interface Note {
-  id: string;
-  room_id: string;
-  title: string;
-  content: string;
-  updated_by_device_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface ActivityLog {
   id: string;
   room_id: string;

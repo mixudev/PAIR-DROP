@@ -210,55 +210,6 @@ export async function shareLinkAction(input: {
   }
 }
 
-export async function saveNoteAction(input: {
-  roomId: string;
-  accessToken: string;
-  noteId?: string;
-  title: string;
-  content: string;
-  deviceId: string;
-}) {
-  try {
-    const supabase = createServiceRoleClient();
-    const roomRepo = new RoomRepository(supabase);
-    const contentRepo = new ContentRepository(supabase);
-
-    const member = await roomRepo.verifyAccess(input.roomId, input.accessToken);
-    if (!member) throw new Error("Unauthorized");
-
-    let note;
-    if (input.noteId) {
-      note = await contentRepo.updateNote(input.noteId, {
-        title: sanitizeInput(input.title, 200),
-        content: sanitizeInput(input.content, 100000),
-        updated_by_device_id: input.deviceId,
-      });
-    } else {
-      note = await contentRepo.createNote({
-        room_id: input.roomId,
-        title: sanitizeInput(input.title, 200),
-        content: sanitizeInput(input.content, 100000),
-        updated_by_device_id: input.deviceId,
-      });
-    }
-
-    await contentRepo.logActivity({
-      room_id: input.roomId,
-      action: "note_updated",
-      metadata: { title: note.title },
-      device_id: input.deviceId,
-      device_name: member.device_name,
-    });
-
-    return { success: true, data: note };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save note",
-    };
-  }
-}
-
 export async function deleteFileAction(input: {
   roomId: string;
   accessToken: string;

@@ -24,7 +24,6 @@ export const WORKSPACE_SECTIONS = [
   { id: "files", label: "Files", icon: "Files" },
   { id: "links", label: "Links", icon: "Link" },
   { id: "clipboard", label: "Clipboard", icon: "Clipboard" },
-  { id: "notes", label: "Notes", icon: "StickyNote" },
   { id: "members", label: "Members", icon: "Users" },
   { id: "settings", label: "Settings", icon: "Settings" },
 ] as const;

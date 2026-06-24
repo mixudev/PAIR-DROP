@@ -5,7 +5,6 @@ import {
   Files,
   Link2,
   Settings,
-  StickyNote,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,6 @@ const iconMap = {
   Files,
   Link: Link2,
   Clipboard,
-  StickyNote,
   Users,
   Settings,
 };

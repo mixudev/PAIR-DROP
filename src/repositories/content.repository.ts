@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ActivityLog, ClipboardItem, Message, Note } from "@/types";
+import type { ActivityLog, ClipboardItem, Message } from "@/types";
 
 export class ContentRepository {
   constructor(private supabase: SupabaseClient) {}
@@ -53,37 +53,6 @@ export class ContentRepository {
         await this.supabase.from("clipboard_items").delete().eq("id", item.id);
       }
     }
-  }
-
-  async getNotes(roomId: string) {
-    const { data, error } = await this.supabase
-      .from("notes")
-      .select("*")
-      .eq("room_id", roomId)
-      .order("updated_at", { ascending: false });
-    if (error) throw error;
-    return data as Note[];
-  }
-
-  async createNote(note: Partial<Note>) {
-    const { data, error } = await this.supabase
-      .from("notes")
-      .insert(note)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Note;
-  }
-
-  async updateNote(id: string, updates: Partial<Note>) {
-    const { data, error } = await this.supabase
-      .from("notes")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Note;
   }
 
   async getActivities(roomId: string, limit = 10) {

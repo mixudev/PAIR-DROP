@@ -96,18 +96,17 @@ export class RoomService {
     const fileRepo = new FileRepository(supabase);
     const contentRepo = new ContentRepository(supabase);
 
-    const [files, messages, clipboardItems, notes, activities] =
+    const [files, messages, clipboardItems, activities] =
       await Promise.all([
         fileRepo.findByRoom(roomId),
         contentRepo.getMessages(roomId),
         contentRepo.getClipboardItems(roomId, env.clipboardHistoryLimit),
-        contentRepo.getNotes(roomId),
         contentRepo.getActivities(roomId),
       ]);
 
     await this.roomRepo.updateMemberLastSeen(member.id);
 
-    return { room, member, members, files, messages, clipboardItems, notes, activities };
+    return { room, member, members, files, messages, clipboardItems, activities };
   }
 }
 

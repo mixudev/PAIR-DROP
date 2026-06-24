@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { FilePanel } from "@/modules/files/components/file-panel";
 import { LinksPanel } from "@/modules/clipboard/components/links-panel";
 import { ClipboardPanel } from "@/modules/clipboard/components/clipboard-panel";
-import { NotesPanel } from "@/modules/notes/components/notes-panel";
 import { MembersPanel } from "@/modules/rooms/components/members-panel";
 import { SettingsPanel } from "@/modules/settings/components/settings-panel";
 import { useRoomRealtime, useHeartbeat } from "@/hooks/use-realtime";
@@ -23,7 +22,6 @@ const sectionTitles: Record<string, string> = {
   files: "Files",
   links: "Links",
   clipboard: "Clipboard",
-  notes: "Notes",
   members: "Members",
   settings: "Settings",
 };
@@ -45,7 +43,6 @@ export function WorkspaceLayout() {
     setFiles,
     setMessages,
     setClipboardItems,
-    setNotes,
     setActivities,
     memberToken,
     setMemberToken,
@@ -79,7 +76,6 @@ export function WorkspaceLayout() {
         setFiles(d.files);
         setMessages(d.messages);
         setClipboardItems(d.clipboardItems);
-        setNotes(d.notes);
         setActivities(d.activities);
       } else {
         setError(result.error ?? "Failed to load room");
@@ -97,7 +93,6 @@ export function WorkspaceLayout() {
     setFiles,
     setMessages,
     setClipboardItems,
-    setNotes,
     setActivities,
     setMemberToken,
   ]);
@@ -128,8 +123,6 @@ export function WorkspaceLayout() {
         return <LinksPanel roomId={roomId} />;
       case "clipboard":
         return <ClipboardPanel roomId={roomId} />;
-      case "notes":
-        return <NotesPanel roomId={roomId} />;
       case "members":
         return <MembersPanel />;
       case "settings":

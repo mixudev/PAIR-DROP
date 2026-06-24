@@ -7,7 +7,6 @@ import type {
   ActivityLog,
   ClipboardItem,
   Message,
-  Note,
   RoomMember,
   SharedFile,
 } from "@/types";
@@ -18,8 +17,6 @@ export function useRoomRealtime(roomId: string | null) {
     removeFile,
     addMessage,
     addClipboardItem,
-    updateNote,
-    addNote,
     addActivity,
     setMembers,
     setConnectionStatus,
@@ -55,16 +52,6 @@ export function useRoomRealtime(roomId: string | null) {
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notes", filter: `room_id=eq.${roomId}` },
-        (payload) => addNote(payload.new as Note),
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "notes", filter: `room_id=eq.${roomId}` },
-        (payload) => updateNote(payload.new as Note),
-      )
-      .on(
-        "postgres_changes",
         { event: "INSERT", schema: "public", table: "activity_logs", filter: `room_id=eq.${roomId}` },
         (payload) => addActivity(payload.new as ActivityLog),
       )
@@ -97,8 +84,6 @@ export function useRoomRealtime(roomId: string | null) {
     removeFile,
     addMessage,
     addClipboardItem,
-    updateNote,
-    addNote,
     addActivity,
     setMembers,
     setConnectionStatus,
