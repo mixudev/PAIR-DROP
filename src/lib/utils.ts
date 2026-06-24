@@ -15,7 +15,7 @@ export function formatFileSize(bytes: number): string {
 
 export function generateRoomCode(): string {
   const num = Math.floor(1000 + Math.random() * 9000);
-  return `LAZ-${num}`;
+  return `PAIR-${num}`;
 }
 
 export function generateSecureToken(length = 32): string {

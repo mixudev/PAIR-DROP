@@ -9,7 +9,7 @@
 ## Features
 
 - **Pair Mode** — QR code one-time pairing between desktop and mobile without login
-- **Room Mode** — Create/join shared rooms with codes like `PD-4827`
+- **Room Mode** — Create/join shared rooms with codes like `PAIR-4827`
 - **File Sharing** — Drag & drop upload with progress, preview, download
 - **Clipboard Sync** — Instant text/code sync with history (max 50 items)
 - **Notes Sync** — Collaborative markdown notes with autosave
@@ -154,7 +154,7 @@ Add your Vercel domain to Supabase **Authentication** → **URL Configuration** 
 
 ### Room Mode
 1. **Create Room** → set name, visibility, expiry
-2. Share the room code (e.g. `PD-4827`) with others
+2. Share the room code (e.g. `PAIR-4827`) with others
 3. Others join via **Join Room** page or QR scan
 
 ### Workspace

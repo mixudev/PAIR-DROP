@@ -91,7 +91,7 @@ export function CreateRoomForm() {
             <Label htmlFor="customCode">Custom Code (optional)</Label>
             <Input
               id="customCode"
-              placeholder="LAZ-1234"
+              placeholder="PAIR-1234"
               {...register("customCode")}
             />
           </div>

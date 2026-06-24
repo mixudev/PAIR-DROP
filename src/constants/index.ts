@@ -2,7 +2,7 @@ export const APP_NAME = "PairDrop";
 export const APP_DESCRIPTION =
   "Real-time file, link, text, and clipboard sync across all your devices.";
 
-export const ROOM_CODE_PREFIX = "PD";
+export const ROOM_CODE_PREFIX = "PAIR";
 export const ROOM_CODE_LENGTH = 4;
 
 export const CONNECTION_STATUS = {
