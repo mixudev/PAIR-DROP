@@ -99,7 +99,7 @@ export const useDeviceStore = create<DeviceState>()(
       },
     }),
     {
-      name: "lazshare-device",
+      name: "pairdrop-device",
       partialize: (state) => ({
         deviceName: state.deviceName,
       }),

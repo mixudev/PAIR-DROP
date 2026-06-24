@@ -42,7 +42,7 @@ export function DashboardHero() {
           <span className="text-muted-foreground">Across every device.</span>
         </h1>
         <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-          LazShare is a real-time platform for sharing files, links, text, and
+          PairDrop is a real-time platform for sharing files, links, text, and
           clipboard content between your devices — no account required.
         </p>
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">

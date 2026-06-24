@@ -1,10 +1,10 @@
--- LazShare Seed Data for Development
+-- PairDrop Seed Data for Development
 -- Run after 001_initial_schema.sql
 
 INSERT INTO rooms (id, code, name, type, is_public, expires_at)
 VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'LAZ-4827', 'Demo Public Room', 'public', true, NOW() + INTERVAL '24 hours'),
-  ('a0000000-0000-0000-0000-000000000002', 'LAZ-7391', 'Team Workspace', 'private', false, NOW() + INTERVAL '24 hours');
+  ('a0000000-0000-0000-0000-000000000001', 'PD-4827', 'Demo Public Room', 'public', true, NOW() + INTERVAL '24 hours'),
+  ('a0000000-0000-0000-0000-000000000002', 'PD-7391', 'Team Workspace', 'private', false, NOW() + INTERVAL '24 hours');
 
 INSERT INTO room_settings (room_id, max_file_size_mb, clipboard_history_limit)
 VALUES
@@ -19,12 +19,12 @@ VALUES
 
 INSERT INTO messages (room_id, type, content, sender_device_id, sender_name)
 VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'link', 'https://lazshare.app', 'demo-device-1', 'MacBook Pro'),
-  ('a0000000-0000-0000-0000-000000000001', 'text', 'Welcome to LazShare demo room!', 'demo-device-2', 'iPhone 15');
+  ('a0000000-0000-0000-0000-000000000001', 'link', 'https://pairdrop.app', 'demo-device-1', 'MacBook Pro'),
+  ('a0000000-0000-0000-0000-000000000001', 'text', 'Welcome to PairDrop demo room!', 'demo-device-2', 'iPhone 15');
 
 INSERT INTO clipboard_items (room_id, content, sender_device_id, sender_name)
 VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'npm install lazshare', 'demo-device-1', 'MacBook Pro'),
+  ('a0000000-0000-0000-0000-000000000001', 'npm install pairdrop', 'demo-device-1', 'MacBook Pro'),
   ('a0000000-0000-0000-0000-000000000001', 'const hello = "world";', 'demo-device-2', 'iPhone 15');
 
 INSERT INTO notes (room_id, title, content, updated_by_device_id)
@@ -34,6 +34,6 @@ VALUES
 
 INSERT INTO activity_logs (room_id, action, metadata, device_id, device_name)
 VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'room_created', '{"code": "LAZ-4827"}', 'demo-device-1', 'MacBook Pro'),
+  ('a0000000-0000-0000-0000-000000000001', 'room_created', '{"code": "PD-4827"}', 'demo-device-1', 'MacBook Pro'),
   ('a0000000-0000-0000-0000-000000000001', 'member_joined', '{}', 'demo-device-2', 'iPhone 15'),
   ('a0000000-0000-0000-0000-000000000001', 'clipboard_sent', '{"preview": "npm install"}', 'demo-device-1', 'MacBook Pro');

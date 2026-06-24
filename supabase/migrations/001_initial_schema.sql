@@ -1,4 +1,4 @@
--- LazShare Database Schema
+-- PairDrop Database Schema
 -- Run this migration in Supabase SQL Editor or via Supabase CLI
 
 -- Extensions

@@ -1,11 +1,11 @@
--- LazShare Storage Bucket Setup
+-- PairDrop Storage Bucket Setup
 -- Run in Supabase SQL Editor after creating the bucket in Dashboard
 
--- Create bucket (also doable via Dashboard: Storage > New Bucket > "lazshare-files", public: false)
+-- Create bucket (also doable via Dashboard: Storage > New Bucket > "pairdrop-files", public: false)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
-  'lazshare-files',
-  'lazshare-files',
+  'pairdrop-files',
+  'pairdrop-files',
   false,
   52428800,
   ARRAY[
@@ -28,13 +28,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Storage RLS Policies
 CREATE POLICY "Allow authenticated uploads" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'lazshare-files');
+  FOR INSERT WITH CHECK (bucket_id = 'pairdrop-files');
 
 CREATE POLICY "Allow authenticated reads" ON storage.objects
-  FOR SELECT USING (bucket_id = 'lazshare-files');
+  FOR SELECT USING (bucket_id = 'pairdrop-files');
 
 CREATE POLICY "Allow authenticated deletes" ON storage.objects
-  FOR DELETE USING (bucket_id = 'lazshare-files');
+  FOR DELETE USING (bucket_id = 'pairdrop-files');
 
 CREATE POLICY "Allow authenticated updates" ON storage.objects
-  FOR UPDATE USING (bucket_id = 'lazshare-files');
+  FOR UPDATE USING (bucket_id = 'pairdrop-files');

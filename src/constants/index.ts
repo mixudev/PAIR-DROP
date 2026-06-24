@@ -1,8 +1,8 @@
-export const APP_NAME = "LazShare";
+export const APP_NAME = "PairDrop";
 export const APP_DESCRIPTION =
   "Real-time file, link, text, and clipboard sync across all your devices.";
 
-export const ROOM_CODE_PREFIX = "LAZ";
+export const ROOM_CODE_PREFIX = "PD";
 export const ROOM_CODE_LENGTH = 4;
 
 export const CONNECTION_STATUS = {
@@ -32,5 +32,5 @@ export const WORKSPACE_SECTIONS = [
 export type WorkspaceSectionId =
   (typeof WORKSPACE_SECTIONS)[number]["id"];
 
-export const DEVICE_STORAGE_KEY = "lazshare_device_id";
-export const MEMBER_TOKEN_STORAGE_KEY = "lazshare_member_token";
+export const DEVICE_STORAGE_KEY = "pairdrop_device_id";
+export const MEMBER_TOKEN_STORAGE_KEY = "pairdrop_member_token";

@@ -9,7 +9,7 @@ export default function HomePage() {
         <DashboardHero />
       </main>
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        LazShare — Real-time sync across all your devices
+        PairDrop — Real-time sync across all your devices
       </footer>
     </div>
   );

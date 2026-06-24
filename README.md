@@ -1,15 +1,15 @@
-# LazShare
+# PairDrop
 
-**LazShare** is a modern real-time platform for syncing and sharing files, links, text, and clipboard content across devices. Built with Next.js 15, Supabase, and a production-ready feature-based architecture.
+**PairDrop** is a modern real-time platform for syncing and sharing files, links, text, and clipboard content across devices. Built with Next.js 15, Supabase, and a production-ready feature-based architecture.
 
-![LazShare](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
+![PairDrop](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square&logo=typescript)
 ![Supabase](https://img.shields.io/badge/Supabase-Realtime-green?style=flat-square&logo=supabase)
 
 ## Features
 
 - **Pair Mode** — QR code one-time pairing between desktop and mobile without login
-- **Room Mode** — Create/join shared rooms with codes like `LAZ-4827`
+- **Room Mode** — Create/join shared rooms with codes like `PD-4827`
 - **File Sharing** — Drag & drop upload with progress, preview, download
 - **Clipboard Sync** — Instant text/code sync with history (max 50 items)
 - **Notes Sync** — Collaborative markdown notes with autosave
@@ -75,7 +75,7 @@ src/
 
 ```bash
 git clone <your-repo-url>
-cd lazshare
+cd pairdrop
 npm install
 ```
 
@@ -91,7 +91,7 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-NEXT_PUBLIC_STORAGE_BUCKET=lazshare-files
+NEXT_PUBLIC_STORAGE_BUCKET=pairdrop-files
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -113,7 +113,7 @@ In Supabase Dashboard → **Database** → **Replication**, ensure these tables 
 - `rooms`, `room_members`, `files`, `messages`, `clipboard_items`, `notes`, `activity_logs`, `pair_sessions`
 
 #### Storage Bucket
-The migration creates the `lazshare-files` bucket. Verify in **Storage** → **Buckets** that it exists with a 50MB file size limit.
+The migration creates the `pairdrop-files` bucket. Verify in **Storage** → **Buckets** that it exists with a 50MB file size limit.
 
 ### 4. Run Development Server
 
@@ -129,7 +129,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 git add .
-git commit -m "Initial LazShare setup"
+git commit -m "Initial PairDrop setup"
 git push origin main
 ```
 
@@ -138,7 +138,7 @@ git push origin main
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import your GitHub repository
 3. Add all environment variables from `.env.example`
-4. Set `NEXT_PUBLIC_APP_URL` to your Vercel domain (e.g. `https://lazshare.vercel.app`)
+4. Set `NEXT_PUBLIC_APP_URL` to your Vercel domain (e.g. `https://pairdrop.vercel.app`)
 5. Deploy
 
 ### 3. Update Supabase
@@ -148,13 +148,13 @@ Add your Vercel domain to Supabase **Authentication** → **URL Configuration** 
 ## Usage Guide
 
 ### Pair Mode
-1. Open LazShare on desktop → **Create Pair Session**
+1. Open PairDrop on desktop → **Create Pair Session**
 2. Scan the QR code with your phone
 3. Both devices connect to a private room instantly
 
 ### Room Mode
 1. **Create Room** → set name, visibility, expiry
-2. Share the room code (e.g. `LAZ-4827`) with others
+2. Share the room code (e.g. `PD-4827`) with others
 3. Others join via **Join Room** page or QR scan
 
 ### Workspace
@@ -183,7 +183,7 @@ Once in a room, use the sidebar:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | — |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key | — |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) | — |
-| `NEXT_PUBLIC_STORAGE_BUCKET` | Storage bucket name | `lazshare-files` |
+| `NEXT_PUBLIC_STORAGE_BUCKET` | Storage bucket name | `pairdrop-files` |
 | `NEXT_PUBLIC_APP_URL` | App public URL | `http://localhost:3000` |
 | `PAIR_SESSION_EXPIRY_MINUTES` | Pair session TTL | `30` |
 | `MAX_FILE_SIZE_MB` | Max upload size | `50` |
