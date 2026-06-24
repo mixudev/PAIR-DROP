@@ -86,7 +86,7 @@ export class ContentRepository {
     return data as Note;
   }
 
-  async getActivities(roomId: string, limit = 50) {
+  async getActivities(roomId: string, limit = 10) {
     const { data, error } = await this.supabase
       .from("activity_logs")
       .select("*")
@@ -104,6 +104,19 @@ export class ContentRepository {
       .select()
       .single();
     if (error) throw error;
+    await this.trimActivityLog(activity.room_id!, 10);
     return data as ActivityLog;
+  }
+
+  async trimActivityLog(roomId: string, limit: number) {
+    const { data: all } = await this.supabase
+      .from("activity_logs")
+      .select("id")
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false });
+    if (all && all.length > limit) {
+      const toDelete = all.slice(limit).map((r) => r.id);
+      await this.supabase.from("activity_logs").delete().in("id", toDelete);
+    }
   }
 }

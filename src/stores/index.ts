@@ -155,7 +155,7 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
   setActivities: (activities) => set({ activities }),
   addActivity: (activity) =>
     set((s) => ({
-      activities: [activity, ...s.activities].slice(0, 100),
+      activities: [activity, ...s.activities].slice(0, 10),
     })),
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
   setActiveSection: (activeSection) => set({ activeSection }),

@@ -2,6 +2,7 @@
 
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,20 @@ export function SettingsPanel() {
           <CardDescription>Share this room with others</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <div className="rounded-md border border-border bg-white p-3">
+              <QRCodeSVG
+                value={roomUrl}
+                size={160}
+                level="M"
+                includeMargin
+                fgColor="#171717"
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              Scan to join this room
+            </p>
+          </div>
           <div className="space-y-2">
             <Label>Room Code</Label>
             <div className="flex gap-2">

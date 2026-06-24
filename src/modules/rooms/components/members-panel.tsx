@@ -65,7 +65,7 @@ export function MembersPanel() {
           <p className="text-sm text-muted-foreground">No activity yet</p>
         ) : (
           <div className="space-y-2">
-            {activities.slice(0, 20).map((activity) => (
+            {activities.slice(0, 10).map((activity) => (
               <div
                 key={activity.id}
                 className="flex items-start gap-2 rounded-md border border-border p-3"
