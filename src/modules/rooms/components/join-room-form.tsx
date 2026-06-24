@@ -94,7 +94,7 @@ export function JoinRoomForm() {
         <CardHeader>
           <CardTitle>Enter Room Code</CardTitle>
           <CardDescription>
-            Enter a code like LAZ-4827 to join an existing room
+            Enter a code like PAIR-XXXX to join an existing room
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,7 +103,7 @@ export function JoinRoomForm() {
               <Label htmlFor="code">Room Code</Label>
               <Input
                 id="code"
-                placeholder="LAZ-4827"
+                placeholder="PAIR-XXXX"
                 className="font-mono text-lg tracking-wider"
                 {...register("code")}
                 onChange={(e) =>

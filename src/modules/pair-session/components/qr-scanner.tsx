@@ -18,6 +18,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
 
   const startScanner = async () => {
     setError(null);
+    setIsScanning(true);
     try {
       const scanner = new Html5Qrcode(containerId);
       scannerRef.current = scanner;
@@ -31,8 +32,8 @@ export function QRScanner({ onScan }: QRScannerProps) {
         },
         () => {},
       );
-      setIsScanning(true);
     } catch (err) {
+      setIsScanning(false);
       const message =
         err instanceof Error ? err.message : "Camera access denied";
       setError(
