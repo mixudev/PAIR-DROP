@@ -121,6 +121,90 @@ export class RoomService {
     return { room, member };
   }
 
+  async createMasterRoom(input: CreateRoomInput, device: DeviceInfo) {
+    const code = generateRoomCode();
+    const expiresAt =
+      input.expiryHours > 0
+        ? new Date(Date.now() + input.expiryHours * 3600000).toISOString()
+        : null;
+
+    const room = await this.roomRepo.create({
+      code,
+      name: sanitizeInput(input.name, 100) || "Master Room",
+      type: "master",
+      is_public: false,
+      expires_at: expiresAt,
+    });
+
+    await this.roomRepo.createSettings(room.id);
+
+    const member = await this.roomRepo.addMember({
+      room_id: room.id,
+      device_id: device.deviceId,
+      device_name: sanitizeInput(device.deviceName, 50),
+      is_host: true,
+    });
+
+    await this.contentRepo.logActivity({
+      room_id: room.id,
+      action: "room_created",
+      metadata: { code: room.code, type: "master" },
+      device_id: device.deviceId,
+      device_name: device.deviceName,
+    });
+
+    return { room, member };
+  }
+
+  async joinMasterRoom(masterRoomId: string, accessToken: string, device: DeviceInfo, displayName: string) {
+    // Verify the access token belongs to the master room
+    const masterMember = await this.roomRepo.verifyAccess(masterRoomId, accessToken);
+    if (!masterMember) throw new Error("Invalid access token");
+
+    // Check if this device already has a participant room
+    const existingParticipants = await this.roomRepo.getParticipants(masterRoomId);
+    const existing = existingParticipants.find((p) => p.device_id === device.deviceId);
+    if (existing) {
+      return { participantRoomId: existing.participant_room_id };
+    }
+
+    // Create a new room for the participant
+    const participantRoom = await this.roomRepo.create({
+      code: generateRoomCode(),
+      name: `${displayName}'s Room`,
+      type: "public",
+      is_public: true,
+      expires_at: null,
+    });
+
+    await this.roomRepo.createSettings(participantRoom.id);
+
+    const participantMember = await this.roomRepo.addMember({
+      room_id: participantRoom.id,
+      device_id: device.deviceId,
+      device_name: sanitizeInput(displayName, 50),
+      is_host: true,
+    });
+
+    // Link participant to master room
+    await this.roomRepo.addParticipant(
+      masterRoomId,
+      participantRoom.id,
+      sanitizeInput(displayName, 100),
+      device.deviceId,
+    );
+
+    await this.contentRepo.logActivity({
+      room_id: participantRoom.id,
+      action: "room_created",
+      metadata: { type: "participant", master_room_id: masterRoomId },
+      device_id: device.deviceId,
+      device_name: displayName,
+    });
+
+    return { participantRoomId: participantRoom.id, member: participantMember };
+  }
+
   async getRoomData(roomId: string, accessToken: string) {
     const member = await this.roomRepo.verifyAccess(roomId, accessToken);
     if (!member) throw new Error("Unauthorized access");

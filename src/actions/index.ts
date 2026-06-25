@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env, maxFileSizeBytes } from "@/config/env";
 import { ContentRepository } from "@/repositories/content.repository";
 import { FileRepository } from "@/repositories/file.repository";
+import { MasterRepository } from "@/repositories/master.repository";
 import { RoomRepository } from "@/repositories/room.repository";
 import { PairSessionService, RoomService } from "@/services/room.service";
 import { createServiceRoleClient, createServerSupabaseClient } from "@/lib/supabase/server";
@@ -486,6 +487,105 @@ export async function getRoomSettingsAction(roomId: string, accessToken: string)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to load settings",
+    };
+  }
+}
+
+export async function createMasterRoomAction(input: {
+  name?: string;
+  expiryHours: number;
+  device: { deviceId: string; deviceName: string };
+}) {
+  try {
+    const service = new RoomService();
+    const result = await service.createMasterRoom(
+      {
+        name: input.name ?? "Master Room",
+        isPublic: false,
+        expiryHours: input.expiryHours,
+      },
+      input.device,
+    );
+
+    await linkRoomToUser(result.room.id, result.member.id, result.member.access_token);
+
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create master room",
+    };
+  }
+}
+
+export async function joinMasterRoomAction(input: {
+  masterRoomId: string;
+  accessToken: string;
+  device: { deviceId: string; deviceName: string };
+  displayName: string;
+}) {
+  try {
+    const service = new RoomService();
+    const result = await service.joinMasterRoom(
+      input.masterRoomId,
+      input.accessToken,
+      input.device,
+      input.displayName,
+    );
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to join master room",
+    };
+  }
+}
+
+export async function getMasterParticipantsAction(masterRoomId: string, accessToken: string) {
+  try {
+    const supabase = createServiceRoleClient();
+    const roomRepo = new RoomRepository(supabase);
+
+    const member = await roomRepo.verifyAccess(masterRoomId, accessToken);
+    if (!member) throw new Error("Unauthorized");
+
+    const participants = await roomRepo.getParticipants(masterRoomId);
+    return { success: true, data: participants };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load participants",
+    };
+  }
+}
+
+export async function getParticipantContentAction(
+  masterRoomId: string,
+  participantDeviceId: string,
+  accessToken: string,
+) {
+  try {
+    const supabase = createServiceRoleClient();
+    const roomRepo = new RoomRepository(supabase);
+    const member = await roomRepo.verifyAccess(masterRoomId, accessToken);
+    if (!member) throw new Error("Unauthorized");
+
+    const participants = await roomRepo.getParticipants(masterRoomId);
+    const participant = participants.find((p) => p.device_id === participantDeviceId);
+    if (!participant) throw new Error("Participant not found");
+
+    const masterRepo = new MasterRepository(supabase);
+    const [files, clipboard, links] = await Promise.all([
+      masterRepo.getParticipantFiles(participant.participant_room_id),
+      masterRepo.getParticipantClipboard(participant.participant_room_id),
+      masterRepo.getParticipantMessages(participant.participant_room_id),
+    ]);
+
+    return { success: true, data: { files, clipboard, links, participant } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load participant content",
     };
   }
 }

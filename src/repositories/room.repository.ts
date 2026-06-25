@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Room, RoomMember, RoomSettings } from "@/types";
+import type { Room, RoomMember, RoomSettings, MasterRoomParticipant } from "@/types";
 
 export class RoomRepository {
   constructor(private supabase: SupabaseClient) {}
@@ -105,6 +105,39 @@ export class RoomRepository {
       .single();
     if (error) return null;
     return data as RoomSettings;
+  }
+
+  async addParticipant(masterRoomId: string, participantRoomId: string, displayName: string, deviceId: string) {
+    const { data, error } = await this.supabase
+      .from("master_room_participants")
+      .insert({
+        master_room_id: masterRoomId,
+        participant_room_id: participantRoomId,
+        display_name: displayName,
+        device_id: deviceId,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as MasterRoomParticipant;
+  }
+
+  async getParticipants(masterRoomId: string) {
+    const { data, error } = await this.supabase
+      .from("master_room_participants")
+      .select("*")
+      .eq("master_room_id", masterRoomId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return data as MasterRoomParticipant[];
+  }
+
+  async removeParticipant(masterRoomId: string, deviceId: string) {
+    await this.supabase
+      .from("master_room_participants")
+      .delete()
+      .eq("master_room_id", masterRoomId)
+      .eq("device_id", deviceId);
   }
 
   async updateSettings(roomId: string, updates: Partial<RoomSettings>) {

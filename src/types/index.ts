@@ -1,4 +1,4 @@
-export type RoomType = "pair" | "public" | "private";
+export type RoomType = "pair" | "public" | "private" | "master";
 export type PairSessionStatus = "waiting" | "connected" | "expired";
 export type MessageType = "text" | "link" | "system";
 export type ActivityAction =
@@ -109,6 +109,15 @@ export interface RoomSettings {
   password_updated_at: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface MasterRoomParticipant {
+  id: string;
+  master_room_id: string;
+  participant_room_id: string;
+  display_name: string;
+  device_id: string;
+  created_at: string;
 }
 
 export interface DeviceInfo {

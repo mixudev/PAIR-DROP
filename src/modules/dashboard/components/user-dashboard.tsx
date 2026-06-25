@@ -20,6 +20,7 @@ import {
   Camera,
   Scan,
   Lock,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +54,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/providers/auth-provider";
 import { getUserRoomsAction, deleteRoomAction } from "@/actions/auth";
-import { joinRoomAction } from "@/actions";
+import { joinRoomAction, createMasterRoomAction } from "@/actions";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore } from "@/stores";
 import { Header } from "@/components/layouts/header";
@@ -86,6 +87,7 @@ export function UserDashboard() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [passwordDialog, setPasswordDialog] = useState<{ code: string } | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
+  const [creatingMaster, setCreatingMaster] = useState(false);
 
   const fetchRooms = async () => {
     if (!user) return;
@@ -124,6 +126,33 @@ export function UserDashboard() {
       setDeletingId(null);
     }
   };
+
+  const handleCreateMasterRoom = useCallback(async () => {
+    if (!deviceId) {
+      toast.error("Device not initialized");
+      return;
+    }
+    setCreatingMaster(true);
+    try {
+      const result = await createMasterRoomAction({
+        name: "Master Room",
+        expiryHours: 0,
+        device: { deviceId, deviceName },
+      });
+      if (result.success && result.data) {
+        const roomId = result.data.room.id;
+        const token = result.data.member.access_token;
+        localStorage.setItem(getRoomTokenKey(roomId), token);
+        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
+        toast.success("Master room created!");
+        router.push(`/master-room/${roomId}`);
+      } else {
+        toast.error(result.error ?? "Gagal membuat master room");
+      }
+    } finally {
+      setCreatingMaster(false);
+    }
+  }, [deviceId, deviceName, router]);
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -325,6 +354,19 @@ export function UserDashboard() {
               <Camera className="mr-2 h-4 w-4" />
               Gabung Room
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCreateMasterRoom}
+              disabled={creatingMaster}
+            >
+              {creatingMaster ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Monitor className="mr-2 h-4 w-4" />
+              )}
+              Room Master
+            </Button>
             <Button asChild size="sm">
               <Link href="/room/create">
                 <Plus className="mr-2 h-4 w-4" />
@@ -349,6 +391,14 @@ export function UserDashboard() {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCreateMasterRoom} disabled={creatingMaster}>
+                  {creatingMaster ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Monitor className="mr-2 h-4 w-4" />
+                  )}
+                  Room Master
+                </Button>
                 <Button asChild variant="outline" size="sm">
                   <Link href="/room/create">
                     <Plus className="mr-2 h-4 w-4" />
