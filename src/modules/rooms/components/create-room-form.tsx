@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -181,46 +182,54 @@ export function CreateRoomForm() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-2xl gap-6 sm:grid-cols-2">
-      <Card
-        className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
-        onClick={() => setMode("code")}
-      >
-        <CardHeader className="items-center text-center pb-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <KeyRound className="h-7 w-7 text-primary" />
-          </div>
-          <CardTitle className="mt-2">Buat dengan Kode</CardTitle>
-          <CardDescription>
-            Buat room dengan kode unik — bagikan ke siapa saja
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <Button variant="outline" className="w-full">
-            Pilih
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="mx-auto w-full max-w-lg space-y-4">
+      <Button variant="ghost" size="sm" asChild>
+        <Link href="/dashboard">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Kembali ke Dashboard
+        </Link>
+      </Button>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Card
+          className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
+          onClick={() => setMode("code")}
+        >
+          <CardHeader className="items-center text-center pb-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <KeyRound className="h-7 w-7 text-primary" />
+            </div>
+            <CardTitle className="mt-2">Buat dengan Kode</CardTitle>
+            <CardDescription>
+              Buat room dengan kode unik — bagikan ke siapa saja
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button variant="outline" className="w-full">
+              Pilih
+            </Button>
+          </CardContent>
+        </Card>
 
-      <Card
-        className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
-        onClick={() => setMode("pair")}
-      >
-        <CardHeader className="items-center text-center pb-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <QrCode className="h-7 w-7 text-primary" />
-          </div>
-          <CardTitle className="mt-2">Pair dengan QR</CardTitle>
-          <CardDescription>
-            Pair dua device secara instan via scan QR code
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <Button variant="outline" className="w-full">
-            Pilih
-          </Button>
-        </CardContent>
-      </Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
+          onClick={() => setMode("pair")}
+        >
+          <CardHeader className="items-center text-center pb-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <QrCode className="h-7 w-7 text-primary" />
+            </div>
+            <CardTitle className="mt-2">Pair dengan QR</CardTitle>
+            <CardDescription>
+              Pair dua device secara instan via scan QR code
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button variant="outline" className="w-full">
+              Pilih
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

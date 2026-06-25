@@ -103,6 +103,8 @@ export interface RoomSettings {
   clipboard_history_limit: number;
   allow_file_upload: boolean;
   allow_guest_delete: boolean;
+  has_password: boolean;
+  room_password: string | null;
   created_at: string;
   updated_at: string;
 }

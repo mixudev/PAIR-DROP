@@ -394,3 +394,85 @@ export async function getFileUrlAction(storagePath: string) {
     };
   }
 }
+
+export async function updateRoomAction(input: {
+  roomId: string;
+  accessToken: string;
+  isPublic?: boolean;
+}) {
+  try {
+    const supabase = createServiceRoleClient();
+    const roomRepo = new RoomRepository(supabase);
+
+    const member = await roomRepo.verifyAccess(input.roomId, input.accessToken);
+    if (!member || !member.is_host) throw new Error("Only the host can update room settings");
+
+    const updates: Record<string, unknown> = {};
+    if (input.isPublic !== undefined) {
+      updates.is_public = input.isPublic;
+      updates.type = input.isPublic ? "public" : "private";
+    }
+
+    await roomRepo.update(input.roomId, updates);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update room",
+    };
+  }
+}
+
+export async function updateRoomPasswordAction(input: {
+  roomId: string;
+  accessToken: string;
+  password: string | null;
+}) {
+  try {
+    const supabase = createServiceRoleClient();
+    const roomRepo = new RoomRepository(supabase);
+
+    const member = await roomRepo.verifyAccess(input.roomId, input.accessToken);
+    if (!member || !member.is_host) throw new Error("Only the host can change room password");
+
+    const settings = await roomRepo.getSettings(input.roomId);
+    if (!settings) throw new Error("Room settings not found");
+
+    if (input.password) {
+      await roomRepo.updateSettings(input.roomId, {
+        has_password: true,
+        room_password: input.password,
+      });
+    } else {
+      await roomRepo.updateSettings(input.roomId, {
+        has_password: false,
+        room_password: null,
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update password",
+    };
+  }
+}
+
+export async function getRoomSettingsAction(roomId: string, accessToken: string) {
+  try {
+    const supabase = createServiceRoleClient();
+    const roomRepo = new RoomRepository(supabase);
+
+    const member = await roomRepo.verifyAccess(roomId, accessToken);
+    if (!member) throw new Error("Unauthorized access");
+
+    const settings = await roomRepo.getSettings(roomId);
+    return { success: true, data: settings };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load settings",
+    };
+  }
+}

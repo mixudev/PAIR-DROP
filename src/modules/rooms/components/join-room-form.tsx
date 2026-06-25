@@ -1,74 +1,67 @@
 "use client";
 
-import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { Camera, ArrowRight, Scan } from "lucide-react";
 import { joinRoomAction } from "@/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { QRScanner } from "@/modules/pair-session/components/qr-scanner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore, useWorkspaceStore } from "@/stores";
-
-const schema = z.object({
-  code: z.string().min(4, "Enter a valid room code"),
-});
-
-type FormData = z.infer<typeof schema>;
 
 export function JoinRoomForm() {
   const router = useRouter();
   const { deviceId, deviceName } = useDeviceStore();
   const resetWorkspace = useWorkspaceStore((s) => s.reset);
+  const [code, setCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   useEffect(() => {
     resetWorkspace();
   }, [resetWorkspace]);
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { code: "" },
-  });
 
-  const joinRoom = async (code: string) => {
+  const joinRoom = useCallback(async (roomCode: string) => {
     if (!deviceId) {
       toast.error("Device not initialized");
       return;
     }
-
-    const result = await joinRoomAction({
-      code: code.toUpperCase().replace(/\s/g, ""),
-      device: { deviceId, deviceName },
-    });
-
-    if (result.success && result.data) {
-      const roomId = result.data.room.id;
-      const token = result.data.member.access_token;
-      localStorage.setItem(getRoomTokenKey(roomId), token);
-      localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
-      toast.success(`Joined ${result.data.room.name}`);
-      router.push(`/workspace/${roomId}`);
-    } else {
-      toast.error(result.error ?? "Failed to join room");
-    }
-  };
-
-  const onSubmit = async (data: FormData) => {
-    await joinRoom(data.code);
-  };
-
-  const handleQRScan = (data: string) => {
+    setIsLoading(true);
     try {
-      const url = new URL(data);
+      const result = await joinRoomAction({
+        code: roomCode.toUpperCase().replace(/\s/g, ""),
+        device: { deviceId, deviceName },
+      });
+
+      if (result.success && result.data) {
+        const roomId = result.data.room.id;
+        const token = result.data.member.access_token;
+        localStorage.setItem(getRoomTokenKey(roomId), token);
+        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
+        toast.success(`Joined ${result.data.room.name}`);
+        router.push(`/workspace/${roomId}`);
+      } else {
+        toast.error(result.error ?? "Failed to join room");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [deviceId, deviceName, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    await joinRoom(code);
+  };
+
+  const handleQRScan = useCallback((scanned: string) => {
+    setScannerOpen(false);
+    try {
+      const url = new URL(scanned);
       const token = url.searchParams.get("token");
       const roomCode = url.searchParams.get("code");
 
@@ -90,44 +83,124 @@ export function JoinRoomForm() {
 
       toast.error("Unrecognized QR code format");
     } catch {
-      joinRoom(data);
+      joinRoom(scanned);
     }
-  };
+  }, [router, joinRoom]);
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Enter Room Code</CardTitle>
+    <>
+      <Card className="mx-auto w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle>Gabung Room</CardTitle>
           <CardDescription>
-            Enter a code like PAIR-XXXX to join an existing room
+            Masukkan kode room atau scan QR untuk bergabung
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Room Code</Label>
-              <Input
-                id="code"
-                placeholder="PAIR-XXXX"
-                className="font-mono text-lg tracking-wider"
-                {...register("code")}
-                onChange={(e) =>
-                  setValue("code", e.target.value.toUpperCase())
-                }
-              />
-              {errors.code && (
-                <p className="text-xs text-destructive">{errors.code.message}</p>
-              )}
+              <Label htmlFor="code">Kode Room</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="code"
+                  placeholder="PAIR-XXXX"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  className="font-mono text-lg tracking-wider flex-1"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setScannerOpen(true)}
+                  title="Scan QR Code"
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Joining..." : "Join Room"}
+            <Button
+              type="submit"
+              className="w-full gap-2"
+              disabled={isLoading || !code.trim()}
+            >
+              {isLoading ? "Joining..." : "Gabung Room"}
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      <QRScanner onScan={handleQRScan} />
+      <Dialog open={scannerOpen} onOpenChange={setScannerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Scan className="h-5 w-5" />
+              Scan QR Code
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <QRScannerInline onScan={handleQRScan} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
+  const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let scanner: { render: (el: string, config?: unknown) => Promise<void>; stop: () => Promise<void> } | null = null;
+
+    const start = async () => {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        scanner = new Html5Qrcode("qr-reader");
+        await scanner.render(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText: string) => {
+            scanner?.stop().catch(() => {});
+            onScan(decodedText);
+          },
+        );
+        setScanning(true);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Camera access denied");
+        setScanning(false);
+      }
+    };
+
+    start();
+
+    return () => {
+      scanner?.stop().catch(() => {});
+    };
+  }, [onScan]);
+
+  return (
+    <div className="flex flex-col items-center gap-3 w-full">
+      <div id="qr-reader" className="w-full max-w-[300px] rounded-lg overflow-hidden" />
+      {error && (
+        <p className="text-sm text-destructive text-center">{error}</p>
+      )}
+      {!error && !scanning && (
+        <p className="text-sm text-muted-foreground">Mengakses kamera...</p>
+      )}
+      {scanning && (
+        <p className="text-sm text-muted-foreground">
+          Arahkan kamera ke QR code room
+        </p>
+      )}
     </div>
   );
 }

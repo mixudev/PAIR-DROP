@@ -67,6 +67,14 @@ export class RoomService {
       return { room, member: existing };
     }
 
+    // Private rooms: only the host device can access
+    if (!room.is_public) {
+      const hostMember = existingMembers.find((m) => m.is_host);
+      if (!hostMember || hostMember.device_id !== device.deviceId) {
+        throw new Error("Room ini private. Hanya pembuat room yang bisa mengakses.");
+      }
+    }
+
     const member = await this.roomRepo.addMember({
       room_id: room.id,
       device_id: device.deviceId,
