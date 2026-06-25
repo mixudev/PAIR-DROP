@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Smartphone } from "lucide-react";
 import { createPairSessionAction, getMemberByDeviceAction } from "@/actions";
+import { linkRoomToUserAction } from "@/actions/auth";
 import { MEMBER_TOKEN_STORAGE_KEY } from "@/constants";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PairQRDisplay } from "@/modules/pair-session/components/pair-qr-display";
@@ -44,6 +45,12 @@ export function PairSessionView() {
           MEMBER_TOKEN_STORAGE_KEY,
           memberResult.data.access_token,
         );
+        // Link room to host's user account so it appears on dashboard
+        await linkRoomToUserAction({
+          roomId,
+          memberId: memberResult.data.id,
+          accessToken: memberResult.data.access_token,
+        });
       }
       toast.success("Device paired successfully!");
       router.push(`/workspace/${roomId}`);

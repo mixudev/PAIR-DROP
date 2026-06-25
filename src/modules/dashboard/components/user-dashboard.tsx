@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -16,6 +17,8 @@ import {
   Loader2,
   LogIn,
   RefreshCw,
+  Camera,
+  Scan,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +30,32 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/providers/auth-provider";
 import { getUserRoomsAction, deleteRoomAction } from "@/actions/auth";
-import { toast } from "sonner";
+import { joinRoomAction } from "@/actions";
+import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
+import { useDeviceStore } from "@/stores";
 import { Header } from "@/components/layouts/header";
+import { toast } from "sonner";
 
 interface RoomData {
   id: string;
@@ -46,9 +71,15 @@ interface RoomData {
 
 export function UserDashboard() {
   const { user, isLoading: authLoading } = useAuth();
+  const { deviceId, deviceName } = useDeviceStore();
+  const router = useRouter();
   const [rooms, setRooms] = useState<RoomData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null);
 
   const fetchRooms = async () => {
     if (!user) return;
@@ -67,17 +98,17 @@ export function UserDashboard() {
 
   useEffect(() => {
     if (user) fetchRooms();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDelete = async (roomId: string) => {
-    if (!confirm("Yakin ingin menghapus room ini?")) return;
-    setDeletingId(roomId);
+  const handleDelete = async () => {
+    if (!deleteDialogId) return;
+    setDeletingId(deleteDialogId);
+    setDeleteDialogId(null);
     try {
-      const result = await deleteRoomAction(roomId);
+      const result = await deleteRoomAction(deleteDialogId);
       if (result.success) {
         toast.success("Room dihapus");
-        setRooms((prev) => prev.filter((r) => r.id !== roomId));
+        setRooms((prev) => prev.filter((r) => r.id !== deleteDialogId));
       } else {
         toast.error(result.error ?? "Gagal menghapus room");
       }
@@ -92,6 +123,31 @@ export function UserDashboard() {
     navigator.clipboard.writeText(code);
     toast.success("Kode room disalin!");
   };
+
+  const handleJoinRoom = useCallback(async () => {
+    if (!deviceId || !joinCode.trim()) return;
+    setJoining(true);
+    try {
+      const result = await joinRoomAction({
+        code: joinCode.toUpperCase().replace(/\s/g, ""),
+        device: { deviceId, deviceName },
+      });
+      if (result.success && result.data) {
+        const roomId = result.data.room.id;
+        const token = result.data.member.access_token;
+        localStorage.setItem(getRoomTokenKey(roomId), token);
+        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
+        toast.success(`Bergabung ke ${result.data.room.name}`);
+        setJoinDialogOpen(false);
+        setJoinCode("");
+        router.push(`/workspace/${roomId}`);
+      } else {
+        toast.error(result.error ?? "Gagal bergabung");
+      }
+    } finally {
+      setJoining(false);
+    }
+  }, [deviceId, deviceName, joinCode, router]);
 
   const formatExpiry = (expiresAt: string | null) => {
     if (!expiresAt) return "Tidak ada";
@@ -172,21 +228,9 @@ export function UserDashboard() {
         {/* Stats */}
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {[
-            {
-              label: "Total Room",
-              value: rooms.length,
-              icon: DoorOpen,
-            },
-            {
-              label: "Room Publik",
-              value: rooms.filter((r) => r.is_public).length,
-              icon: Globe,
-            },
-            {
-              label: "Room Private",
-              value: rooms.filter((r) => !r.is_public).length,
-              icon: Shield,
-            },
+            { label: "Total Room", value: rooms.length, icon: DoorOpen },
+            { label: "Room Publik", value: rooms.filter((r) => r.is_public).length, icon: Globe },
+            { label: "Room Private", value: rooms.filter((r) => !r.is_public).length, icon: Shield },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -208,7 +252,7 @@ export function UserDashboard() {
         </div>
 
         {/* Room List */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Room Saya</h2>
           <div className="flex gap-2">
             <Button
@@ -218,6 +262,10 @@ export function UserDashboard() {
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setJoinDialogOpen(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              Gabung Room
             </Button>
             <Button asChild size="sm">
               <Link href="/room/create">
@@ -239,15 +287,21 @@ export function UserDashboard() {
               <div>
                 <p className="font-medium">Belum ada room</p>
                 <p className="text-sm text-muted-foreground">
-                  Buat room pertama kamu untuk mulai berbagi
+                  Buat atau gabung room untuk mulai berbagi
                 </p>
               </div>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/room/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Buat Room
-                </Link>
-              </Button>
+              <div className="flex gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/room/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Buat Room
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setJoinDialogOpen(true)}>
+                  <Camera className="mr-2 h-4 w-4" />
+                  Gabung Room
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -296,12 +350,7 @@ export function UserDashboard() {
                       Kedaluwarsa: {formatExpiry(room.expires_at)}
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        asChild
-                        variant="default"
-                        size="sm"
-                        className="flex-1"
-                      >
+                      <Button asChild variant="default" size="sm" className="flex-1">
                         <Link href={`/workspace/${room.id}`}>
                           <ExternalLink className="mr-2 h-3.5 w-3.5" />
                           Buka
@@ -314,19 +363,41 @@ export function UserDashboard() {
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDelete(room.id)}
-                        disabled={deletingId === room.id}
-                      >
-                        {deletingId === room.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10"
+                            disabled={deletingId === room.id}
+                          >
+                            {deletingId === room.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Hapus Room?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Room &quot;{room.name ?? room.code}&quot; akan dihapus
+                              permanen beserta semua file dan pesan di dalamnya.
+                              Tindakan ini tidak dapat dibatalkan.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => setDeleteDialogId(room.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Hapus
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
@@ -334,7 +405,49 @@ export function UserDashboard() {
             ))}
           </div>
         )}
+
+        {/* Handle actual deletion triggered by AlertDialog */}
+        {deleteDialogId && <DeleteHandler roomId={deleteDialogId} onConfirm={handleDelete} />}
       </main>
+
+      {/* Join Room Dialog */}
+      <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Scan className="h-5 w-5" />
+              Gabung Room
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="join-code">Kode Room</Label>
+              <Input
+                id="join-code"
+                placeholder="PAIR-XXXX"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                className="font-mono text-lg tracking-wider"
+                autoFocus
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleJoinRoom}
+              disabled={joining || !joinCode.trim()}
+            >
+              {joining ? "Bergabung..." : "Gabung"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+function DeleteHandler({ onConfirm }: { roomId: string; onConfirm: () => void }) {
+  useEffect(() => {
+    onConfirm();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
 }

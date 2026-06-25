@@ -55,13 +55,23 @@ export function WorkspaceLayout() {
     async function loadRoom() {
       if (typeof window === "undefined") return;
 
+      // Check URL for ?token= (from QR scan) and persist it
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get("token");
+      if (urlToken) {
+        localStorage.setItem(getRoomTokenKey(roomId), urlToken);
+        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, urlToken);
+        // Clean URL by removing query param
+        window.history.replaceState({}, "", `/workspace/${roomId}`);
+      }
+
       // Per-room token lookup — prioritised to avoid cross-room conflicts
       const roomToken = localStorage.getItem(getRoomTokenKey(roomId));
       // Fall back to legacy single-slot key for backward compatibility
       const legacyToken = localStorage.getItem(MEMBER_TOKEN_STORAGE_KEY);
       // memberToken from Zustand is intentionally last — it may be stale
       // from a previous room session (see #1 bug fix)
-      const token = roomToken ?? legacyToken ?? memberToken;
+      const token = urlToken ?? roomToken ?? legacyToken ?? memberToken;
 
       if (!token) {
         setError("Not a member of this room. Please join or create this room first.");

@@ -64,18 +64,31 @@ export function JoinRoomForm() {
       const url = new URL(scanned);
       const token = url.searchParams.get("token");
       const roomCode = url.searchParams.get("code");
+      const pathParts = url.pathname.split("/");
+      const workspaceIdx = pathParts.indexOf("workspace");
 
+      // Workspace URL with access token (from settings QR)
+      if (token && workspaceIdx !== -1 && pathParts[workspaceIdx + 1]) {
+        const roomId = pathParts[workspaceIdx + 1];
+        localStorage.setItem(getRoomTokenKey(roomId), token);
+        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
+        router.push(`/workspace/${roomId}`);
+        return;
+      }
+
+      // Pair session token
       if (token) {
         router.push(`/pair/join?token=${token}`);
         return;
       }
+
+      // Room join code
       if (roomCode) {
         joinRoom(roomCode);
         return;
       }
 
-      const pathParts = url.pathname.split("/");
-      const workspaceIdx = pathParts.indexOf("workspace");
+      // Plain workspace URL (no token)
       if (workspaceIdx !== -1 && pathParts[workspaceIdx + 1]) {
         router.push(`/workspace/${pathParts[workspaceIdx + 1]}`);
         return;

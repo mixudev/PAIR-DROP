@@ -129,6 +129,14 @@ export async function joinPairSessionAction(
     const parsedDevice = deviceSchema.parse(device);
     const service = new PairSessionService();
     const result = await service.joinSession(token, parsedDevice);
+
+    // Link room to guest's user account so it appears on dashboard
+    await linkRoomToUser(
+      result.room.id,
+      result.guestMember.id,
+      result.guestMember.access_token,
+    );
+
     return { success: true, data: result };
   } catch (error) {
     return {

@@ -20,47 +20,51 @@ export function Header({ className, showNav = true }: HeaderProps) {
         className,
       )}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-            P
-          </div>
-          <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
-        </Link>
+      <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:px-6">
+        {/* Logo + Nav */}
+        <div className="flex items-center gap-6 min-w-0">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
+              P
+            </div>
+            <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
+          </Link>
 
-        {/* Nav links */}
-        {showNav && (
-          <nav className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/pair"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Pair
-            </Link>
-            <Link
-              href="/room/create"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Buat Room
-            </Link>
-            <Link
-              href="/room/join"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Gabung Room
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Dashboard
-            </Link>
-          </nav>
-        )}
+          {showNav && (
+            <nav className="hidden items-center gap-5 md:flex">
+              <Link
+                href="/pair"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Pair
+              </Link>
+              <Link
+                href="/room/create"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Buat Room
+              </Link>
+              <Link
+                href="/room/join"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Gabung Room
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Dashboard
+              </Link>
+            </nav>
+          )}
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Right side actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <InstallPWAButton />
           <ThemeToggle />
           <UserMenu />
