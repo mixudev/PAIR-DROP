@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { DeviceProvider } from "@/providers/device-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
 import { APP_DESCRIPTION, APP_NAME } from "@/constants";
 import "./globals.css";
 
@@ -63,12 +64,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
-        {/* PWA iOS icons */}
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
-        {/* Splash screens iOS */}
+        <link rel="apple-touch-icon" href="/icons/icon.svg" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
@@ -82,6 +78,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <DeviceProvider>
+              <ServiceWorkerRegister />
               {children}
               <Toaster
                 position="bottom-right"

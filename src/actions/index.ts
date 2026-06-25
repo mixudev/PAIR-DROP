@@ -7,9 +7,31 @@ import { ContentRepository } from "@/repositories/content.repository";
 import { FileRepository } from "@/repositories/file.repository";
 import { RoomRepository } from "@/repositories/room.repository";
 import { PairSessionService, RoomService } from "@/services/room.service";
-import { createServiceRoleClient } from "@/lib/supabase/server";
-import { linkRoomToUserAction } from "@/actions/auth";
+import { createServiceRoleClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { sanitizeInput } from "@/lib/utils";
+
+async function linkRoomToUser(roomId: string, memberId: string, accessToken: string) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const service = createServiceRoleClient();
+    await service.from("rooms").update({ user_id: user.id }).eq("id", roomId);
+    await service.from("room_members").update({ user_id: user.id }).eq("id", memberId);
+    await service.from("user_room_tokens").upsert(
+      {
+        user_id: user.id,
+        room_id: roomId,
+        member_id: memberId,
+        access_token: accessToken,
+      },
+      { onConflict: "user_id,room_id" },
+    );
+  } catch (e) {
+    console.error("[linkRoomToUser] Failed:", e);
+  }
+}
 
 const deviceSchema = z.object({
   deviceId: z.string().uuid(),
@@ -43,12 +65,7 @@ export async function createRoomAction(input: z.infer<typeof createRoomSchema>) 
       parsed.device,
     );
 
-    // Link to authenticated user if logged in
-    await linkRoomToUserAction({
-      roomId: result.room.id,
-      memberId: result.member.id,
-      accessToken: result.member.access_token,
-    });
+    await linkRoomToUser(result.room.id, result.member.id, result.member.access_token);
 
     return { success: true, data: result };
   } catch (error) {
@@ -65,12 +82,7 @@ export async function joinRoomAction(input: z.infer<typeof joinRoomSchema>) {
     const service = new RoomService();
     const result = await service.joinRoom(parsed.code, parsed.device);
 
-    // Link to authenticated user if logged in
-    await linkRoomToUserAction({
-      roomId: result.room.id,
-      memberId: result.member.id,
-      accessToken: result.member.access_token,
-    });
+    await linkRoomToUser(result.room.id, result.member.id, result.member.access_token);
 
     return { success: true, data: result };
   } catch (error) {

@@ -11,6 +11,23 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+function getBrowser(): string {
+  if (typeof navigator === "undefined") return "";
+  const ua = navigator.userAgent;
+  if (/Edg/.test(ua)) return "Edge";
+  if (/Chrome/.test(ua)) return "Chrome";
+  if (/Safari/.test(ua)) return "Safari";
+  if (/Firefox/.test(ua)) return "Firefox";
+  return "";
+}
+
+const INSTALL_GUIDES: Record<string, string> = {
+  Chrome: "Klik ⋮ (menu) → 'Install PairDrop' atau 'Pasang PairDrop'",
+  Edge: "Klik ⋯ (menu) → 'Apps' → 'Install this site as an app'",
+  Safari: "Klik ikon Share (□↑) → 'Add to Home Screen'",
+  Firefox: "Buka menggunakan Chrome atau Edge untuk instalasi PWA",
+};
+
 export function InstallPWAButton({ variant = "ghost" }: { variant?: "ghost" | "outline" | "default" }) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -41,7 +58,9 @@ export function InstallPWAButton({ variant = "ghost" }: { variant?: "ghost" | "o
         setIsInstalled(true);
       }
     } else {
-      toast.info("Buka menggunakan Chrome/Edge dan pastikan HTTPS untuk menginstall aplikasi");
+      const browser = getBrowser();
+      const guide = INSTALL_GUIDES[browser] ?? "Gunakan Chrome atau Edge untuk instalasi aplikasi";
+      toast.info(guide, { duration: 6000 });
     }
   };
 
@@ -73,7 +92,6 @@ export function InstallPWAButton({ variant = "ghost" }: { variant?: "ghost" | "o
   );
 }
 
-/** Banner versi untuk mobile / sticky banner */
 export function InstallPWABanner() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
