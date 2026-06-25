@@ -349,9 +349,9 @@ export function UserDashboard() {
         {/* Stats */}
         <div className="mb-8 grid grid-cols-3 gap-2 sm:gap-4">
           {[
-            { label: "Total Room", value: rooms.length, icon: DoorOpen },
-            { label: "Room Publik", value: rooms.filter((r) => r.is_public).length, icon: Globe },
-            { label: "Room Private", value: rooms.filter((r) => !r.is_public).length, icon: Shield },
+            { label: "Total", value: rooms.length, icon: DoorOpen },
+            { label: "Publik", value: rooms.filter((r) => r.is_public).length, icon: Globe },
+            { label: "Private", value: rooms.filter((r) => !r.is_public).length, icon: Shield },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}

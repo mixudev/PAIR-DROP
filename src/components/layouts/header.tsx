@@ -23,8 +23,14 @@ export function Header({ className, showNav = true }: HeaderProps) {
       <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-            P
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M4 20h16" />
+              <path d="M4 20V4" />
+              <path d="M4 8h12" />
+              <path d="M4 12h8" />
+              <path d="M4 16h4" />
+            </svg>
           </div>
           <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
         </Link>
