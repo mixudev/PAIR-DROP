@@ -89,8 +89,10 @@ export function UserDashboard() {
   const [passwordInput, setPasswordInput] = useState("");
   const [creatingMaster, setCreatingMaster] = useState(false);
 
+  const userId = user?.id;
+
   const fetchRooms = useCallback(async (silent = false) => {
-    if (!user) return;
+    if (!userId) return;
     if (!silent) setInitialLoading(true);
     try {
       const result = await getUserRoomsAction();
@@ -102,15 +104,15 @@ export function UserDashboard() {
     } finally {
       setInitialLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
-    if (user) fetchRooms();
-  }, [user, fetchRooms]);
+    if (userId) fetchRooms();
+  }, [userId, fetchRooms]);
 
-  // Realtime: update rooms when there are changes
+  // Realtime: update rooms silently in background
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const supabase = createClient();
     const channel = supabase
       .channel("dashboard-rooms")
@@ -120,13 +122,13 @@ export function UserDashboard() {
           event: "*",
           schema: "public",
           table: "rooms",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         () => fetchRooms(true),
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetchRooms]);
+  }, [userId, fetchRooms]);
 
   const handleDelete = async () => {
     if (!deleteDialogId) return;
@@ -345,7 +347,7 @@ export function UserDashboard() {
         </motion.div>
 
         {/* Stats */}
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="mb-8 grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: "Total Room", value: rooms.length, icon: DoorOpen },
             { label: "Room Publik", value: rooms.filter((r) => r.is_public).length, icon: Globe },
@@ -373,28 +375,29 @@ export function UserDashboard() {
         {/* Room List */}
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Room Saya</h2>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setJoinDialogOpen(true)}>
-              <Camera className="mr-2 h-4 w-4" />
-              Gabung Room
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" size="sm" onClick={() => setJoinDialogOpen(true)} className="text-xs px-2">
+              <Camera className="mr-1 h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Gabung</span>
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={handleCreateMasterRoom}
               disabled={creatingMaster}
+              className="text-xs px-2"
             >
               {creatingMaster ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin shrink-0" />
               ) : (
-                <Monitor className="mr-2 h-4 w-4" />
+                <Monitor className="mr-1 h-3.5 w-3.5 shrink-0" />
               )}
-              Room Master
+              <span className="truncate">Master</span>
             </Button>
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="text-xs px-2">
               <Link href="/room/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Buat Room
+                <Plus className="mr-1 h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Buat</span>
               </Link>
             </Button>
           </div>
