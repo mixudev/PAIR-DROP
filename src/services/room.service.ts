@@ -215,6 +215,11 @@ export class RoomService {
     if (!member) throw new Error("Unauthorized access");
 
     const room = await this.roomRepo.findById(roomId);
+    if (room.expires_at && new Date(room.expires_at) < new Date()) {
+      await this.cleanupRoom(roomId);
+      throw new Error("Room ini sudah kedaluwarsa");
+    }
+
     const members = await this.roomRepo.getMembers(roomId);
 
     const supabase = createServiceRoleClient();
@@ -232,6 +237,17 @@ export class RoomService {
     await this.roomRepo.updateMemberLastSeen(member.id);
 
     return { room, member, members, files, messages, clipboardItems, activities };
+  }
+
+  private async cleanupRoom(roomId: string) {
+    const supabase = createServiceRoleClient();
+    await supabase.from("files").delete().eq("room_id", roomId);
+    await supabase.from("messages").delete().eq("room_id", roomId);
+    await supabase.from("clipboard_items").delete().eq("room_id", roomId);
+    await supabase.from("activity_logs").delete().eq("room_id", roomId);
+    await supabase.from("room_settings").delete().eq("id", roomId);
+    await supabase.from("room_members").delete().eq("room_id", roomId);
+    await supabase.from("rooms").delete().eq("id", roomId);
   }
 }
 

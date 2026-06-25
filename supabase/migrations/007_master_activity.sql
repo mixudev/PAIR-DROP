@@ -13,20 +13,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Apply to room_files
+-- Apply to files
 CREATE TRIGGER on_participant_file_upload
-  AFTER INSERT ON room_files
+  AFTER INSERT ON files
   FOR EACH ROW
   EXECUTE FUNCTION update_master_participant_activity();
 
--- Apply to room_messages
+-- Apply to messages
 CREATE TRIGGER on_participant_message_insert
-  AFTER INSERT ON room_messages
+  AFTER INSERT ON messages
   FOR EACH ROW
   EXECUTE FUNCTION update_master_participant_activity();
 
--- Apply to room_clipboard
+-- Apply to clipboard_items
 CREATE TRIGGER on_participant_clipboard_insert
-  AFTER INSERT ON room_clipboard
+  AFTER INSERT ON clipboard_items
   FOR EACH ROW
   EXECUTE FUNCTION update_master_participant_activity();

@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { PairSessionView } from "@/modules/pair-session/components/pair-session-view";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey, ROOM_EXPIRY_OPTIONS } from "@/constants";
 import { useDeviceStore, useWorkspaceStore } from "@/stores";
+import { useAuth } from "@/providers/auth-provider";
 
 const schema = z.object({
   name: z.string().min(1, "Room name is required").max(100),
@@ -134,6 +135,7 @@ function RoomCodeForm() {
 export function CreateRoomForm() {
   const [mode, setMode] = useState<Mode>("select");
   const resetWorkspace = useWorkspaceStore((s) => s.reset);
+  const { user } = useAuth();
 
   useEffect(() => {
     resetWorkspace();
@@ -141,25 +143,23 @@ export function CreateRoomForm() {
 
   if (mode === "code") {
     return (
-      <Card className="mx-auto max-w-lg">
-        <CardHeader className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute left-4 top-4"
-            onClick={() => setMode("select")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <CardTitle>Create Room</CardTitle>
-          <CardDescription>
-            Create a shared room for multiple devices to sync in real-time
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RoomCodeForm />
-        </CardContent>
-      </Card>
+      <div className="mx-auto max-w-lg">
+        <Button variant="ghost" size="sm" className="mb-4" onClick={() => setMode("select")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Kembali
+        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Room</CardTitle>
+            <CardDescription>
+              Create a shared room for multiple devices to sync in real-time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RoomCodeForm />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -182,11 +182,11 @@ export function CreateRoomForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4">
-      <Button variant="ghost" size="sm" asChild>
-        <Link href="/dashboard">
+    <div className="mx-auto w-full max-w-lg">
+      <Button variant="ghost" size="sm" asChild className="mb-4">
+        <Link href={user ? "/dashboard" : "/"}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Kembali ke Dashboard
+          {user ? "Kembali ke Dashboard" : "Kembali"}
         </Link>
       </Button>
       <div className="grid gap-6 sm:grid-cols-2">

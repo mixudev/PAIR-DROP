@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
-import { signInWithGoogle, signOut } from "@/lib/supabase/auth";
+import { signOut } from "@/lib/supabase/auth";
 import { toast } from "sonner";
 
 export function UserMenu() {
@@ -23,12 +23,8 @@ export function UserMenu() {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch {
-      toast.error("Login gagal. Coba lagi.");
-    }
+  const handleSignIn = () => {
+    router.push("/login");
   };
 
   const handleSignOut = async () => {

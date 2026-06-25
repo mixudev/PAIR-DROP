@@ -110,7 +110,26 @@ export async function getUserRoomsAction() {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return { success: true, data: data ?? [] };
+
+    // Cleanup expired rooms
+    const now = new Date().toISOString();
+    const expired = (data ?? []).filter(
+      (r: { expires_at: string | null }) => r.expires_at && r.expires_at < now,
+    );
+    for (const room of expired) {
+      await service.from("files").delete().eq("room_id", room.id);
+      await service.from("messages").delete().eq("room_id", room.id);
+      await service.from("clipboard_items").delete().eq("room_id", room.id);
+      await service.from("activity_logs").delete().eq("room_id", room.id);
+      await service.from("room_settings").delete().eq("id", room.id);
+      await service.from("room_members").delete().eq("room_id", room.id);
+      await service.from("rooms").delete().eq("id", room.id);
+    }
+    const active = (data ?? []).filter(
+      (r: { expires_at: string | null }) => !r.expires_at || r.expires_at >= now,
+    );
+
+    return { success: true, data: active };
   } catch (error) {
     return {
       success: false,

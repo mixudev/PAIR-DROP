@@ -53,8 +53,8 @@ export function DashboardHero() {
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/room/create">
-              Create Room
+            <Link href="/room/join">
+              Join Room
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
