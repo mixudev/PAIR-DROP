@@ -52,7 +52,7 @@ export class RoomService {
     return { room, member };
   }
 
-  async joinRoom(code: string, device: DeviceInfo) {
+  async joinRoom(code: string, device: DeviceInfo, password?: string) {
     const room = await this.roomRepo.findByCode(code);
 
     if (room.expires_at && new Date(room.expires_at) < new Date()) {
@@ -61,17 +61,41 @@ export class RoomService {
 
     const existingMembers = await this.roomRepo.getMembers(room.id);
     const existing = existingMembers.find((m) => m.device_id === device.deviceId);
+    const hostMember = existingMembers.find((m) => m.is_host);
+    const isHostDevice = hostMember?.device_id === device.deviceId;
+
+    const settings = await this.roomRepo.getSettings(room.id);
+    const hasPassword = !!(settings?.has_password && settings.room_password);
 
     if (existing) {
+      if (isHostDevice) {
+        await this.roomRepo.updateMemberLastSeen(existing.id);
+        return { room, member: existing };
+      }
+
+      if (hasPassword) {
+        const isVerified = existing.password_verified_at
+          && new Date(existing.password_verified_at) >= new Date(settings!.password_updated_at);
+
+        if (!isVerified) {
+          if (!password || password !== settings!.room_password) {
+            throw new Error("Kata sandi room diperlukan");
+          }
+          await this.roomRepo.updateMemberPasswordVerified(existing.id);
+        }
+      }
+
       await this.roomRepo.updateMemberLastSeen(existing.id);
       return { room, member: existing };
     }
 
-    // Private rooms: only the host device can access
-    if (!room.is_public) {
-      const hostMember = existingMembers.find((m) => m.is_host);
-      if (!hostMember || hostMember.device_id !== device.deviceId) {
-        throw new Error("Room ini private. Hanya pembuat room yang bisa mengakses.");
+    if (!room.is_public && !isHostDevice) {
+      throw new Error("Room ini private. Hanya pembuat room yang bisa mengakses.");
+    }
+
+    if (hasPassword && !isHostDevice) {
+      if (!password || password !== settings!.room_password) {
+        throw new Error("Kata sandi room diperlukan");
       }
     }
 
@@ -81,6 +105,10 @@ export class RoomService {
       device_name: sanitizeInput(device.deviceName, 50),
       is_host: false,
     });
+
+    if (hasPassword && password) {
+      await this.roomRepo.updateMemberPasswordVerified(member.id);
+    }
 
     await this.contentRepo.logActivity({
       room_id: room.id,

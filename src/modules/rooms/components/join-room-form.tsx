@@ -3,13 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Camera, ArrowRight, Scan } from "lucide-react";
+import { Camera, ArrowRight, Scan, Lock } from "lucide-react";
 import { joinRoomAction } from "@/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRScannerInline } from "@/components/shared/qr-scanner";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore, useWorkspaceStore } from "@/stores";
@@ -21,12 +21,14 @@ export function JoinRoomForm() {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [passwordDialog, setPasswordDialog] = useState<{ code: string } | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
 
   useEffect(() => {
     resetWorkspace();
   }, [resetWorkspace]);
 
-  const joinRoom = useCallback(async (roomCode: string) => {
+  const joinRoom = useCallback(async (roomCode: string, password?: string) => {
     if (!deviceId) {
       toast.error("Device not initialized");
       return;
@@ -36,6 +38,7 @@ export function JoinRoomForm() {
       const result = await joinRoomAction({
         code: roomCode.toUpperCase().replace(/\s/g, ""),
         device: { deviceId, deviceName },
+        password,
       });
 
       if (result.success && result.data) {
@@ -45,6 +48,8 @@ export function JoinRoomForm() {
         localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
         toast.success(`Joined ${result.data.room.name}`);
         router.push(`/workspace/${roomId}`);
+      } else if ("needsPassword" in result && result.needsPassword) {
+        setPasswordDialog({ code: roomCode });
       } else {
         toast.error(result.error ?? "Failed to join room");
       }
@@ -68,7 +73,6 @@ export function JoinRoomForm() {
       const pathParts = url.pathname.split("/");
       const workspaceIdx = pathParts.indexOf("workspace");
 
-      // Workspace URL with access token (from settings QR)
       if (typeof token === "string" && token.length > 0 && workspaceIdx !== -1) {
         const roomId = pathParts[workspaceIdx + 1];
         if (typeof roomId === "string" && roomId.length > 0) {
@@ -79,19 +83,16 @@ export function JoinRoomForm() {
         }
       }
 
-      // Pair session token
       if (typeof token === "string" && token.length > 0) {
         router.push(`/pair/join?token=${encodeURIComponent(token)}`);
         return;
       }
 
-      // Room join code
       if (typeof roomCode === "string" && roomCode.length > 0) {
         joinRoom(roomCode);
         return;
       }
 
-      // Plain workspace URL (no token)
       if (workspaceIdx !== -1) {
         const roomId = pathParts[workspaceIdx + 1];
         if (typeof roomId === "string" && roomId.length > 0) {
@@ -165,8 +166,43 @@ export function JoinRoomForm() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!passwordDialog} onOpenChange={(open) => { if (!open) { setPasswordDialog(null); setPasswordInput(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Kata Sandi Room
+            </DialogTitle>
+            <DialogDescription>
+              Room ini dilindungi kata sandi. Masukkan kata sandi untuk bergabung.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Input
+              type="password"
+              placeholder="Masukkan kata sandi"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              autoFocus
+            />
+            <Button
+              className="w-full"
+              disabled={!passwordInput.trim()}
+              onClick={() => {
+                if (passwordDialog && passwordInput.trim()) {
+                  const roomCode = passwordDialog.code;
+                  setPasswordDialog(null);
+                  setPasswordInput("");
+                  joinRoom(roomCode, passwordInput);
+                }
+              }}
+            >
+              Gabung
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
-
-

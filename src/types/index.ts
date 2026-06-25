@@ -41,6 +41,7 @@ export interface RoomMember {
   is_host: boolean;
   last_seen_at: string;
   joined_at: string;
+  password_verified_at: string | null;
 }
 
 export interface PairSession {
@@ -105,6 +106,7 @@ export interface RoomSettings {
   allow_guest_delete: boolean;
   has_password: boolean;
   room_password: string | null;
+  password_updated_at: string;
   created_at: string;
   updated_at: string;
 }

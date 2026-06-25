@@ -72,6 +72,13 @@ export class RoomRepository {
       .eq("id", memberId);
   }
 
+  async updateMemberPasswordVerified(memberId: string) {
+    await this.supabase
+      .from("room_members")
+      .update({ password_verified_at: new Date().toISOString() })
+      .eq("id", memberId);
+  }
+
   async verifyAccess(roomId: string, accessToken: string) {
     const { data, error } = await this.supabase
       .from("room_members")

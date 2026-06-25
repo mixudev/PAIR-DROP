@@ -49,6 +49,7 @@ const createRoomSchema = z.object({
 const joinRoomSchema = z.object({
   code: z.string().min(4).max(20),
   device: deviceSchema,
+  password: z.string().optional(),
 });
 
 export async function createRoomAction(input: z.infer<typeof createRoomSchema>) {
@@ -80,16 +81,17 @@ export async function joinRoomAction(input: z.infer<typeof joinRoomSchema>) {
   try {
     const parsed = joinRoomSchema.parse(input);
     const service = new RoomService();
-    const result = await service.joinRoom(parsed.code, parsed.device);
+    const result = await service.joinRoom(parsed.code, parsed.device, parsed.password);
 
     await linkRoomToUser(result.room.id, result.member.id, result.member.access_token);
 
     return { success: true, data: result };
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to join room",
-    };
+    const message = error instanceof Error ? error.message : "Failed to join room";
+    if (message === "Kata sandi room diperlukan") {
+      return { success: false, needsPassword: true, error: message };
+    }
+    return { success: false, error: message };
   }
 }
 
@@ -446,15 +448,18 @@ export async function updateRoomPasswordAction(input: {
     const settings = await roomRepo.getSettings(input.roomId);
     if (!settings) throw new Error("Room settings not found");
 
+    const now = new Date().toISOString();
     if (input.password) {
       await roomRepo.updateSettings(input.roomId, {
         has_password: true,
         room_password: input.password,
+        password_updated_at: now,
       });
     } else {
       await roomRepo.updateSettings(input.roomId, {
         has_password: false,
         room_password: null,
+        password_updated_at: now,
       });
     }
 
