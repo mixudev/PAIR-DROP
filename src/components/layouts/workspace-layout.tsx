@@ -15,7 +15,7 @@ import { ClipboardPanel } from "@/modules/clipboard/components/clipboard-panel";
 import { MembersPanel } from "@/modules/rooms/components/members-panel";
 import { SettingsPanel } from "@/modules/settings/components/settings-panel";
 import { useRoomRealtime, useHeartbeat } from "@/hooks/use-realtime";
-import { MEMBER_TOKEN_STORAGE_KEY } from "@/constants";
+import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useWorkspaceStore } from "@/stores";
 
 const sectionTitles: Record<string, string> = {
@@ -53,30 +53,34 @@ export function WorkspaceLayout() {
 
   useEffect(() => {
     async function loadRoom() {
-      const token =
-        memberToken ??
-        (typeof window !== "undefined"
-          ? localStorage.getItem(MEMBER_TOKEN_STORAGE_KEY)
-          : null);
+      if (typeof window === "undefined") return;
+
+      // Per-room token lookup (fixes private room access bug)
+      const roomToken = localStorage.getItem(getRoomTokenKey(roomId));
+      // Fall back to legacy single-slot key for backward compatibility
+      const legacyToken = localStorage.getItem(MEMBER_TOKEN_STORAGE_KEY);
+      const token = memberToken ?? roomToken ?? legacyToken;
 
       if (!token) {
-        setError("Not a member of this room. Please join first.");
+        setError("Not a member of this room. Please join or create this room first.");
         setIsLoading(false);
         return;
       }
 
-      setMemberToken(token);
+      setMemberToken(token, roomId);
       const result = await getRoomDataAction(roomId, token);
 
       if (result.success && result.data) {
         const d = result.data;
         setRoom(d.room);
-        setMember(d.member);
+        setMember(d.member, roomId);
         setMembers(d.members);
         setFiles(d.files);
         setMessages(d.messages);
         setClipboardItems(d.clipboardItems);
         setActivities(d.activities);
+        // Persist token under room-specific key for future visits
+        localStorage.setItem(getRoomTokenKey(roomId), d.member.access_token);
       } else {
         setError(result.error ?? "Failed to load room");
       }

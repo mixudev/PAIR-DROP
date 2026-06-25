@@ -32,4 +32,12 @@ export type WorkspaceSectionId =
   (typeof WORKSPACE_SECTIONS)[number]["id"];
 
 export const DEVICE_STORAGE_KEY = "pairdrop_device_id";
+/** @deprecated Use getRoomTokenKey(roomId) for per-room storage */
 export const MEMBER_TOKEN_STORAGE_KEY = "pairdrop_member_token";
+
+/** Returns the localStorage key for a specific room's access token */
+export function getRoomTokenKey(roomId: string): string {
+  return `pairdrop_token_${roomId}`;
+}
+
+export const AUTH_REDIRECT_KEY = "pairdrop_auth_redirect";

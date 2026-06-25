@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import {
   DEVICE_STORAGE_KEY,
   MEMBER_TOKEN_STORAGE_KEY,
+  getRoomTokenKey,
   type ConnectionStatus,
   type WorkspaceSectionId,
 } from "@/constants";
@@ -35,8 +36,9 @@ interface WorkspaceState {
   activeSection: WorkspaceSectionId;
   uploadProgress: UploadProgress[];
   memberToken: string | null;
+  currentRoomId: string | null;
   setRoom: (room: Room | null) => void;
-  setMember: (member: RoomMember | null) => void;
+  setMember: (member: RoomMember | null, roomId?: string) => void;
   setMembers: (members: RoomMember[]) => void;
   setFiles: (files: SharedFile[]) => void;
   addFile: (file: SharedFile) => void;
@@ -51,7 +53,7 @@ interface WorkspaceState {
   setActiveSection: (section: WorkspaceSectionId) => void;
   setUploadProgress: (progress: UploadProgress[]) => void;
   updateUploadProgress: (fileName: string, progress: Partial<UploadProgress>) => void;
-  setMemberToken: (token: string | null) => void;
+  setMemberToken: (token: string | null, roomId?: string) => void;
   reset: () => void;
 }
 
@@ -114,13 +116,20 @@ const initialWorkspace = {
   activeSection: "files" as WorkspaceSectionId,
   uploadProgress: [] as UploadProgress[],
   memberToken: null as string | null,
+  currentRoomId: null as string | null,
 };
 
-export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
+export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   ...initialWorkspace,
   setRoom: (room) => set({ room }),
-  setMember: (member) => {
+  setMember: (member, roomId?: string) => {
     if (member && typeof window !== "undefined") {
+      const rid = roomId ?? get().currentRoomId ?? member.room_id;
+      if (rid) {
+        // Per-room token storage — fix for private room access bug
+        localStorage.setItem(getRoomTokenKey(rid), member.access_token);
+      }
+      // Keep legacy key as fallback for backward compatibility
       localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, member.access_token);
     }
     set({ member, memberToken: member?.access_token ?? null });
@@ -153,11 +162,14 @@ export const useWorkspaceStore = create<WorkspaceState>()((set) => ({
         p.fileName === fileName ? { ...p, ...progress } : p,
       ),
     })),
-  setMemberToken: (memberToken) => {
+  setMemberToken: (memberToken, roomId?: string) => {
     if (memberToken && typeof window !== "undefined") {
+      if (roomId) {
+        localStorage.setItem(getRoomTokenKey(roomId), memberToken);
+      }
       localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, memberToken);
     }
-    set({ memberToken });
+    set({ memberToken, currentRoomId: roomId ?? null });
   },
   reset: () => set(initialWorkspace),
 }));

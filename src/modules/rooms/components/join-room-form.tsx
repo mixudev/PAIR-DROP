@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QRScanner } from "@/modules/pair-session/components/qr-scanner";
-import { MEMBER_TOKEN_STORAGE_KEY } from "@/constants";
+import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore } from "@/stores";
 
 const schema = z.object({
@@ -45,12 +45,12 @@ export function JoinRoomForm() {
     });
 
     if (result.success && result.data) {
-      localStorage.setItem(
-        MEMBER_TOKEN_STORAGE_KEY,
-        result.data.member.access_token,
-      );
+      const roomId = result.data.room.id;
+      const token = result.data.member.access_token;
+      localStorage.setItem(getRoomTokenKey(roomId), token);
+      localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
       toast.success(`Joined ${result.data.room.name}`);
-      router.push(`/workspace/${result.data.room.id}`);
+      router.push(`/workspace/${roomId}`);
     } else {
       toast.error(result.error ?? "Failed to join room");
     }
