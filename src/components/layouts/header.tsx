@@ -48,16 +48,16 @@ export function Header({ className, showNav = true }: HeaderProps) {
                 Pair
               </Link>
               <Link
-                href="/room/create"
+                href="/"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                Buat Room
+                Home
               </Link>
               <Link
-                href="/room/join"
+                href="/about"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                Gabung Room
+                About
               </Link>
             </nav>
           )}

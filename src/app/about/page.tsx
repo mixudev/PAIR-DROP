@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/layouts/header";
 import { APP_NAME } from "@/constants";
 
@@ -12,14 +13,15 @@ export default function AboutPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 sm:px-6 text-center">
-        <div className="mb-8 mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
-            <path d="M4 20h16" />
-            <path d="M4 20V4" />
-            <path d="M4 8h12" />
-            <path d="M4 12h8" />
-            <path d="M4 16h4" />
-          </svg>
+        <div className="mb-8 mx-auto">
+          <Image
+            src="/icons/icon.png"
+            alt={APP_NAME}
+            width={64}
+            height={64}
+            priority
+            className="rounded-2xl shadow-lg"
+          />
         </div>
         <h1 className="mb-2 text-3xl font-bold">{APP_NAME}</h1>
         <p className="mb-8 text-muted-foreground">
@@ -29,9 +31,13 @@ export default function AboutPage() {
         <div className="rounded-xl border border-border bg-card p-6 text-left space-y-4">
           <h2 className="text-lg font-semibold">Developer</h2>
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-              LM
-            </div>
+            <Image
+                src="https://github.com/mixudev.png?size=200"
+                alt="Lazuardi Mandegar"
+                width={48}
+                height={48}
+                className="rounded-full object-cover"
+              />
             <div>
               <p className="font-medium">Lazuardi Mandegar</p>
               <a
