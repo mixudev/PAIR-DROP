@@ -17,7 +17,6 @@ export function InstallPWAButton({ variant = "ghost" }: { variant?: "ghost" | "o
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
       return;
@@ -33,17 +32,20 @@ export function InstallPWAButton({ variant = "ghost" }: { variant?: "ghost" | "o
   }, []);
 
   const handleInstall = async () => {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === "accepted") {
-      toast.success("PairDrop berhasil diinstall!");
-      setInstallPrompt(null);
-      setIsInstalled(true);
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === "accepted") {
+        toast.success("PairDrop berhasil diinstall!");
+        setInstallPrompt(null);
+        setIsInstalled(true);
+      }
+    } else {
+      toast.info("Buka menggunakan Chrome/Edge dan pastikan HTTPS untuk menginstall aplikasi");
     }
   };
 
-  if (isInstalled || isDismissed || !installPrompt) return null;
+  if (isInstalled || isDismissed) return null;
 
   return (
     <div className="flex items-center gap-1">

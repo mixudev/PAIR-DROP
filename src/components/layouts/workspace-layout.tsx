@@ -55,11 +55,13 @@ export function WorkspaceLayout() {
     async function loadRoom() {
       if (typeof window === "undefined") return;
 
-      // Per-room token lookup (fixes private room access bug)
+      // Per-room token lookup — prioritised to avoid cross-room conflicts
       const roomToken = localStorage.getItem(getRoomTokenKey(roomId));
       // Fall back to legacy single-slot key for backward compatibility
       const legacyToken = localStorage.getItem(MEMBER_TOKEN_STORAGE_KEY);
-      const token = memberToken ?? roomToken ?? legacyToken;
+      // memberToken from Zustand is intentionally last — it may be stale
+      // from a previous room session (see #1 bug fix)
+      const token = roomToken ?? legacyToken ?? memberToken;
 
       if (!token) {
         setError("Not a member of this room. Please join or create this room first.");

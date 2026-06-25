@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey, ROOM_EXPIRY_OPTIONS } from "@/constants";
-import { useDeviceStore } from "@/stores";
+import { useDeviceStore, useWorkspaceStore } from "@/stores";
 
 const schema = z.object({
   name: z.string().min(1, "Room name is required").max(100),
@@ -26,6 +27,11 @@ type FormData = z.infer<typeof schema>;
 export function CreateRoomForm() {
   const router = useRouter();
   const { deviceId, deviceName } = useDeviceStore();
+  const resetWorkspace = useWorkspaceStore((s) => s.reset);
+
+  useEffect(() => {
+    resetWorkspace();
+  }, [resetWorkspace]);
   const {
     register,
     handleSubmit,

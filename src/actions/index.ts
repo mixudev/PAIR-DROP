@@ -8,6 +8,7 @@ import { FileRepository } from "@/repositories/file.repository";
 import { RoomRepository } from "@/repositories/room.repository";
 import { PairSessionService, RoomService } from "@/services/room.service";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { linkRoomToUserAction } from "@/actions/auth";
 import { sanitizeInput } from "@/lib/utils";
 
 const deviceSchema = z.object({
@@ -41,6 +42,14 @@ export async function createRoomAction(input: z.infer<typeof createRoomSchema>) 
       },
       parsed.device,
     );
+
+    // Link to authenticated user if logged in
+    await linkRoomToUserAction({
+      roomId: result.room.id,
+      memberId: result.member.id,
+      accessToken: result.member.access_token,
+    });
+
     return { success: true, data: result };
   } catch (error) {
     return {
@@ -55,6 +64,14 @@ export async function joinRoomAction(input: z.infer<typeof joinRoomSchema>) {
     const parsed = joinRoomSchema.parse(input);
     const service = new RoomService();
     const result = await service.joinRoom(parsed.code, parsed.device);
+
+    // Link to authenticated user if logged in
+    await linkRoomToUserAction({
+      roomId: result.room.id,
+      memberId: result.member.id,
+      accessToken: result.member.access_token,
+    });
+
     return { success: true, data: result };
   } catch (error) {
     return {
