@@ -588,6 +588,20 @@ export async function getParticipantContentAction(
       masterRepo.getParticipantMessages(participant.participant_room_id),
     ]);
 
+    // Update last_activity_at as fallback
+    const timestamps = [
+      ...files.map((f) => f.created_at),
+      ...clipboard.map((c) => c.created_at),
+      ...links.map((l) => l.created_at),
+    ].filter(Boolean);
+    if (timestamps.length > 0) {
+      const latest = timestamps.sort().reverse()[0];
+      await supabase
+        .from("master_room_participants")
+        .update({ last_activity_at: latest })
+        .eq("id", participant.id);
+    }
+
     return { success: true, data: { files, clipboard, links, participant } };
   } catch (error) {
     return {

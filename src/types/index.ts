@@ -118,6 +118,7 @@ export interface MasterRoomParticipant {
   display_name: string;
   device_id: string;
   created_at: string;
+  last_activity_at: string | null;
 }
 
 export interface DeviceInfo {

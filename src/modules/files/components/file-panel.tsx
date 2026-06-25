@@ -177,6 +177,7 @@ export function FilePanel({ roomId }: FilePanelProps) {
           <input
             type="file"
             multiple
+            accept="*/*"
             className="hidden"
             disabled={isUploading}
             onChange={(e) => e.target.files && uploadFiles(e.target.files)}

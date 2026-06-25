@@ -60,12 +60,6 @@ export function Header({ className, showNav = true }: HeaderProps) {
               >
                 Dashboard
               </Link>
-              <Link
-                href="/dashboard?createMaster=1"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Room Master
-              </Link>
             </nav>
           )}
           <InstallPWAButton />

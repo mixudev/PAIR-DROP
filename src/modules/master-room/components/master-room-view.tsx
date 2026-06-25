@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings } from "lucide-react";
+import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -223,23 +223,54 @@ export function MasterRoomView({ room, member }: Props) {
               </div>
             ) : (
               <ScrollArea className="flex-1">
-                <div className="p-2 space-y-1">
-                  {participants.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => handleSelectParticipant(p)}
-                      className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted ${
-                        selectedParticipant?.id === p.id ? "bg-muted font-medium" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                          {p.display_name.charAt(0).toUpperCase()}
+                <div className="p-2">
+                  {(() => {
+                    // Group by date
+                    const grouped: Record<string, MasterRoomParticipant[]> = {};
+                    for (const p of participants) {
+                      const date = p.last_activity_at
+                        ? new Date(p.last_activity_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+                        : new Date(p.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+                      if (!grouped[date]) grouped[date] = [];
+                      grouped[date].push(p);
+                    }
+                    return Object.entries(grouped).map(([date, ps]) => (
+                      <div key={date} className="mb-3">
+                        <p className="mb-1.5 px-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{date}</p>
+                        <div className="space-y-1">
+                          {ps.map((p) => {
+                            const activityTime = p.last_activity_at
+                              ? new Date(p.last_activity_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                              : null;
+                            return (
+                              <button
+                                key={p.id}
+                                onClick={() => handleSelectParticipant(p)}
+                                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted ${
+                                  selectedParticipant?.id === p.id ? "bg-muted font-medium" : ""
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                                    {p.display_name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <span className="truncate block">{p.display_name}</span>
+                                    {activityTime && (
+                                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        {activityTime}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                        <span className="truncate">{p.display_name}</span>
                       </div>
-                    </button>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </ScrollArea>
             )}

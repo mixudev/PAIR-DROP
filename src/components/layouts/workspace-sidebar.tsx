@@ -39,7 +39,7 @@ export function WorkspaceSidebar({
   return (
     <aside
       className={cn(
-        "flex w-full flex-col border-r border-border bg-background md:w-56 lg:w-64",
+        "flex w-full max-w-[70vw] flex-col border-r border-border bg-background shadow-xl md:max-w-none md:shadow-none md:w-56 lg:w-64",
         className,
       )}
     >
