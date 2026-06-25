@@ -20,7 +20,7 @@ export default function AboutPage() {
             width={64}
             height={64}
             priority
-            className="rounded-2xl shadow-lg"
+            className="rounded-2xl shadow-lg mx-auto"
           />
         </div>
         <h1 className="mb-2 text-3xl font-bold">{APP_NAME}</h1>
