@@ -59,6 +59,11 @@ export class RoomService {
       throw new Error("This room has expired");
     }
 
+    // Master room: tidak bisa join langsung via code
+    if (room.type === "master") {
+      throw new Error("Room master hanya bisa diakses melalui QR code");
+    }
+
     const existingMembers = await this.roomRepo.getMembers(room.id);
     const existing = existingMembers.find((m) => m.device_id === device.deviceId);
     const hostMember = existingMembers.find((m) => m.is_host);
@@ -132,7 +137,7 @@ export class RoomService {
       code,
       name: sanitizeInput(input.name, 100) || "Master Room",
       type: "master",
-      is_public: false,
+      is_public: true,
       expires_at: expiresAt,
     });
 

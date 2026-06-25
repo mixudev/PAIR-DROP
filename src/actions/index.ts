@@ -92,6 +92,9 @@ export async function joinRoomAction(input: z.infer<typeof joinRoomSchema>) {
     if (message === "Kata sandi room diperlukan") {
       return { success: false, needsPassword: true, error: message };
     }
+    if (message === "Room master hanya bisa diakses melalui QR code") {
+      return { success: false, isMasterRoom: true, error: message };
+    }
     return { success: false, error: message };
   }
 }
@@ -410,6 +413,7 @@ export async function updateRoomAction(input: {
   roomId: string;
   accessToken: string;
   isPublic?: boolean;
+  name?: string;
 }) {
   try {
     const supabase = createServiceRoleClient();
@@ -422,6 +426,9 @@ export async function updateRoomAction(input: {
     if (input.isPublic !== undefined) {
       updates.is_public = input.isPublic;
       updates.type = input.isPublic ? "public" : "private";
+    }
+    if (input.name !== undefined) {
+      updates.name = sanitizeInput(input.name, 100);
     }
 
     await roomRepo.update(input.roomId, updates);

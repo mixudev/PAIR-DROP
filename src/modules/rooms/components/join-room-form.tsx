@@ -50,6 +50,8 @@ export function JoinRoomForm() {
         router.push(`/workspace/${roomId}`);
       } else if ("needsPassword" in result && result.needsPassword) {
         setPasswordDialog({ code: roomCode });
+      } else if ("isMasterRoom" in result && result.isMasterRoom) {
+        toast.error("Room master hanya bisa diakses melalui QR code");
       } else {
         toast.error(result.error ?? "Failed to join room");
       }
@@ -79,6 +81,16 @@ export function JoinRoomForm() {
           try { localStorage.setItem(getRoomTokenKey(roomId), token); } catch {}
           try { localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token); } catch {}
           router.push(`/workspace/${roomId}`);
+          return;
+        }
+      }
+
+      // Master room join URL
+      const masterIdx = pathParts.indexOf("master");
+      if (masterIdx !== -1 && typeof token === "string" && token.length > 0) {
+        const roomId = url.searchParams.get("roomId");
+        if (typeof roomId === "string" && roomId.length > 0) {
+          router.push(`/master/join?roomId=${roomId}&token=${encodeURIComponent(token)}`);
           return;
         }
       }

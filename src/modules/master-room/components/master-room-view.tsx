@@ -2,15 +2,23 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, Smartphone, Users, Loader2, RefreshCw } from "lucide-react";
+import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Header } from "@/components/layouts/header";
 import { ParticipantDetailPanel } from "@/modules/master-room/components/participant-detail-panel";
-import { getMasterParticipantsAction, getParticipantContentAction } from "@/actions";
+import { getMasterParticipantsAction, getParticipantContentAction, updateRoomAction, updateRoomPasswordAction } from "@/actions";
 import { createClient } from "@/lib/supabase/client";
 import { env } from "@/config/env";
 import { toast } from "sonner";
@@ -34,6 +42,10 @@ export function MasterRoomView({ room, member }: Props) {
   const [contentLoading, setContentLoading] = useState(false);
   const [participantsLoading, setParticipantsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [roomName, setRoomName] = useState(room.name ?? "");
+  const [roomPassword, setRoomPassword] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const roomUrl = `${env.appUrl}/master/join?roomId=${room.id}&token=${member.access_token}`;
 
@@ -110,6 +122,34 @@ export function MasterRoomView({ room, member }: Props) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const nameResult = await updateRoomAction({
+        roomId: room.id,
+        accessToken: member.access_token,
+        name: roomName.trim() || undefined,
+      });
+      if (!nameResult.success) {
+        toast.error(nameResult.error ?? "Gagal menyimpan nama");
+        return;
+      }
+      const passwordResult = await updateRoomPasswordAction({
+        roomId: room.id,
+        accessToken: member.access_token,
+        password: roomPassword.trim() || null,
+      });
+      if (!passwordResult.success) {
+        toast.error(passwordResult.error ?? "Gagal menyimpan kata sandi");
+        return;
+      }
+      toast.success("Pengaturan disimpan");
+      setSettingsOpen(false);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header showNav={false} />
@@ -118,7 +158,12 @@ export function MasterRoomView({ room, member }: Props) {
         <div className="flex w-full flex-col items-center justify-center border-r border-border p-6 lg:w-[400px]">
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
-              <CardTitle>{room.name}</CardTitle>
+              <CardTitle className="flex items-center justify-center gap-2">
+                {room.name}
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSettingsOpen(true)}>
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </CardTitle>
               <CardDescription>Scan QR untuk bergabung sebagai participant</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
@@ -216,6 +261,44 @@ export function MasterRoomView({ room, member }: Props) {
           )}
         </div>
       </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Pengaturan Room Master</DialogTitle>
+            <DialogDescription>Ubah nama room dan kata sandi</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="master-room-name">Nama Room</Label>
+              <Input
+                id="master-room-name"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                placeholder="Nama room"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="master-room-password">Kata Sandi (kosongkan untuk menghapus)</Label>
+              <Input
+                id="master-room-password"
+                type="password"
+                value={roomPassword}
+                onChange={(e) => setRoomPassword(e.target.value)}
+                placeholder="Kata sandi baru"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>Batal</Button>
+            <Button onClick={handleSaveSettings} disabled={savingSettings}>
+              {savingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

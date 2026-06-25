@@ -180,6 +180,8 @@ export function UserDashboard() {
         router.push(`/workspace/${roomId}`);
       } else if ("needsPassword" in result && result.needsPassword) {
         setPasswordDialog({ code: cleaned });
+      } else if ("isMasterRoom" in result && result.isMasterRoom) {
+        toast.error("Room master hanya bisa diakses melalui QR code");
       } else {
         toast.error(result.error ?? "Gagal bergabung");
       }
@@ -208,6 +210,16 @@ export function UserDashboard() {
           try { localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token); } catch {}
           setJoinDialogOpen(false);
           router.push(`/workspace/${roomId}`);
+          return;
+        }
+      }
+
+      // Master room join URL
+      const masterIdx = pathParts.indexOf("master");
+      if (masterIdx !== -1 && typeof token === "string" && token.length > 0) {
+        const roomId = url.searchParams.get("roomId");
+        if (typeof roomId === "string" && roomId.length > 0) {
+          router.push(`/master/join?roomId=${roomId}&token=${encodeURIComponent(token)}`);
           return;
         }
       }
@@ -339,9 +351,9 @@ export function UserDashboard() {
         </div>
 
         {/* Room List */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Room Saya</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -421,7 +433,7 @@ export function UserDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.04 * i }}
               >
-                <Card className="group hover:border-primary/40 transition-colors">
+                <Card className={`group transition-colors hover:border-primary/40 ${room.type === "master" ? "border-primary/30 bg-primary/5" : ""}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
@@ -433,10 +445,15 @@ export function UserDashboard() {
                             {room.code}
                           </code>
                           <Badge
-                            variant={room.is_public ? "secondary" : "outline"}
+                            variant={room.type === "master" ? "default" : room.is_public ? "secondary" : "outline"}
                             className="text-xs"
                           >
-                            {room.is_public ? (
+                            {room.type === "master" ? (
+                              <>
+                                <Monitor className="mr-1 h-3 w-3" />
+                                Master Room
+                              </>
+                            ) : room.is_public ? (
                               <>
                                 <Globe className="mr-1 h-3 w-3" />
                                 Publik
@@ -459,7 +476,7 @@ export function UserDashboard() {
                     </div>
                     <div className="flex gap-2">
                       <Button asChild variant="default" size="sm" className="flex-1">
-                        <Link href={`/workspace/${room.id}`}>
+                        <Link href={room.type === "master" ? `/master-room/${room.id}` : `/workspace/${room.id}`}>
                           <ExternalLink className="mr-2 h-3.5 w-3.5" />
                           Buka
                         </Link>
