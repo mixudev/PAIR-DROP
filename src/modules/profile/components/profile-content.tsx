@@ -22,13 +22,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/providers/auth-provider";
 import { useDeviceStore } from "@/stores";
-import { createClient } from "@/lib/supabase/client";
+import { signOutAction } from "@/actions/auth";
 
 export function ProfileContent() {
   const { user, isLoading } = useAuth();
   const { deviceName, setDeviceName } = useDeviceStore();
   const router = useRouter();
-  const supabase = createClient();
   const [localName, setLocalName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -37,7 +36,7 @@ export function ProfileContent() {
   }, [deviceName]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutAction();
     router.push("/");
   };
 

@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useWorkspaceStore } from "@/stores";
+import { heartbeatAction } from "@/actions";
 import type {
   ActivityLog,
   ClipboardItem,
@@ -127,11 +128,7 @@ export function usePairSessionRealtime(
 export function useHeartbeat(roomId: string | null, memberId: string | null) {
   const updateLastSeen = useCallback(async () => {
     if (!roomId || !memberId) return;
-    const supabase = createClient();
-    await supabase
-      .from("room_members")
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq("id", memberId);
+    await heartbeatAction(memberId);
   }, [roomId, memberId]);
 
   useEffect(() => {

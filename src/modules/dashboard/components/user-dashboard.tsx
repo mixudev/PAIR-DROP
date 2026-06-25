@@ -16,7 +16,6 @@ import {
   Globe,
   Loader2,
   LogIn,
-  RefreshCw,
   Camera,
   Scan,
   Lock,
@@ -59,6 +58,7 @@ import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore } from "@/stores";
 import { Header } from "@/components/layouts/header";
 import { QRScannerInline } from "@/components/shared/qr-scanner";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface RoomData {
@@ -78,7 +78,7 @@ export function UserDashboard() {
   const { deviceId, deviceName } = useDeviceStore();
   const router = useRouter();
   const [rooms, setRooms] = useState<RoomData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
@@ -89,24 +89,44 @@ export function UserDashboard() {
   const [passwordInput, setPasswordInput] = useState("");
   const [creatingMaster, setCreatingMaster] = useState(false);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async (silent = false) => {
     if (!user) return;
-    setIsLoading(true);
+    if (!silent) setInitialLoading(true);
     try {
       const result = await getUserRoomsAction();
       if (result.success) {
         setRooms(result.data as RoomData[]);
       }
     } catch {
-      toast.error("Gagal memuat data room");
+      if (!silent) toast.error("Gagal memuat data room");
     } finally {
-      setIsLoading(false);
+      setInitialLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) fetchRooms();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, fetchRooms]);
+
+  // Realtime: update rooms when there are changes
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel("dashboard-rooms")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "rooms",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => fetchRooms(true),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchRooms]);
 
   const handleDelete = async () => {
     if (!deleteDialogId) return;
@@ -354,14 +374,6 @@ export function UserDashboard() {
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Room Saya</h2>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchRooms}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            </Button>
             <Button variant="outline" size="sm" onClick={() => setJoinDialogOpen(true)}>
               <Camera className="mr-2 h-4 w-4" />
               Gabung Room
@@ -388,7 +400,7 @@ export function UserDashboard() {
           </div>
         </div>
 
-        {isLoading ? (
+        {initialLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>

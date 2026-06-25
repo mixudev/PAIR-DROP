@@ -566,6 +566,22 @@ export async function getMasterParticipantsAction(masterRoomId: string, accessTo
   }
 }
 
+export async function heartbeatAction(memberId: string) {
+  try {
+    const supabase = createServiceRoleClient();
+    await supabase
+      .from("room_members")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("id", memberId);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update heartbeat",
+    };
+  }
+}
+
 export async function getParticipantContentAction(
   masterRoomId: string,
   participantDeviceId: string,
