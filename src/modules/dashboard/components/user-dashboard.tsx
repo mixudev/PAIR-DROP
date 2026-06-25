@@ -55,6 +55,7 @@ import { joinRoomAction } from "@/actions";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore } from "@/stores";
 import { Header } from "@/components/layouts/header";
+import { QRScannerInline } from "@/modules/rooms/components/join-room-form";
 import { toast } from "sonner";
 
 interface RoomData {
@@ -80,6 +81,7 @@ export function UserDashboard() {
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const fetchRooms = async () => {
     if (!user) return;
@@ -123,6 +125,34 @@ export function UserDashboard() {
     navigator.clipboard.writeText(code);
     toast.success("Kode room disalin!");
   };
+
+  const handleDashboardQRScan = useCallback((scanned: string) => {
+    setScannerOpen(false);
+    try {
+      const url = new URL(scanned);
+      const code = url.searchParams.get("code");
+      if (code) {
+        setJoinCode(code.toUpperCase());
+        return;
+      }
+      const pathParts = url.pathname.split("/");
+      const workspaceIdx = pathParts.indexOf("workspace");
+      const token = url.searchParams.get("token");
+      if (typeof token === "string" && token.length > 0 && workspaceIdx !== -1) {
+        const roomId = pathParts[workspaceIdx + 1];
+        if (typeof roomId === "string" && roomId.length > 0) {
+          try { localStorage.setItem(getRoomTokenKey(roomId), token); } catch {}
+          try { localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token); } catch {}
+          setJoinDialogOpen(false);
+          router.push(`/workspace/${roomId}`);
+          return;
+        }
+      }
+      setJoinCode(scanned.toUpperCase());
+    } catch {
+      setJoinCode(scanned.toUpperCase());
+    }
+  }, [router]);
 
   const handleJoinRoom = useCallback(async () => {
     if (!deviceId || !joinCode.trim()) return;
@@ -422,14 +452,26 @@ export function UserDashboard() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="join-code">Kode Room</Label>
-              <Input
-                id="join-code"
-                placeholder="PAIR-XXXX"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                className="font-mono text-lg tracking-wider"
-                autoFocus
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="join-code"
+                  placeholder="PAIR-XXXX"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  className="font-mono text-lg tracking-wider flex-1"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setScannerOpen(true)}
+                  title="Scan QR Code"
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
             <Button
               className="w-full"
@@ -438,6 +480,21 @@ export function UserDashboard() {
             >
               {joining ? "Bergabung..." : "Gabung"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Scanner Dialog */}
+      <Dialog open={scannerOpen} onOpenChange={setScannerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Scan className="h-5 w-5" />
+              Scan QR Code
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <QRScannerInline onScan={handleDashboardQRScan} />
           </div>
         </DialogContent>
       </Dialog>

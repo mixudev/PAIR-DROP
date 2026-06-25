@@ -68,30 +68,35 @@ export function JoinRoomForm() {
       const workspaceIdx = pathParts.indexOf("workspace");
 
       // Workspace URL with access token (from settings QR)
-      if (token && workspaceIdx !== -1 && pathParts[workspaceIdx + 1]) {
+      if (typeof token === "string" && token.length > 0 && workspaceIdx !== -1) {
         const roomId = pathParts[workspaceIdx + 1];
-        localStorage.setItem(getRoomTokenKey(roomId), token);
-        localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
-        router.push(`/workspace/${roomId}`);
-        return;
+        if (typeof roomId === "string" && roomId.length > 0) {
+          try { localStorage.setItem(getRoomTokenKey(roomId), token); } catch {}
+          try { localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token); } catch {}
+          router.push(`/workspace/${roomId}`);
+          return;
+        }
       }
 
       // Pair session token
-      if (token) {
-        router.push(`/pair/join?token=${token}`);
+      if (typeof token === "string" && token.length > 0) {
+        router.push(`/pair/join?token=${encodeURIComponent(token)}`);
         return;
       }
 
       // Room join code
-      if (roomCode) {
+      if (typeof roomCode === "string" && roomCode.length > 0) {
         joinRoom(roomCode);
         return;
       }
 
       // Plain workspace URL (no token)
-      if (workspaceIdx !== -1 && pathParts[workspaceIdx + 1]) {
-        router.push(`/workspace/${pathParts[workspaceIdx + 1]}`);
-        return;
+      if (workspaceIdx !== -1) {
+        const roomId = pathParts[workspaceIdx + 1];
+        if (typeof roomId === "string" && roomId.length > 0) {
+          router.push(`/workspace/${roomId}`);
+          return;
+        }
       }
 
       toast.error("Unrecognized QR code format");
@@ -163,7 +168,7 @@ export function JoinRoomForm() {
   );
 }
 
-function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
+export function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

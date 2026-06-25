@@ -141,13 +141,19 @@ export function SettingsPanel() {
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="flex flex-col items-center gap-3">
                   <div className="rounded-xl border border-border bg-white p-4">
-                    <QRCodeSVG
-                      value={roomUrl}
-                      size={160}
-                      level="M"
-                      includeMargin
-                      fgColor="#171717"
-                    />
+                    {roomUrl ? (
+                      <QRCodeSVG
+                        value={roomUrl}
+                        size={160}
+                        level="M"
+                        includeMargin
+                        fgColor="#171717"
+                      />
+                    ) : (
+                      <div className="flex h-[160px] w-[160px] items-center justify-center text-xs text-muted-foreground">
+                        Loading...
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground text-center">
                     Scan untuk langsung menuju room
