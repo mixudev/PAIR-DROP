@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { LoginContent } from "@/modules/auth/components/login-content";
 
@@ -7,5 +8,15 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
-  return <LoginContent />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-md border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
 }
