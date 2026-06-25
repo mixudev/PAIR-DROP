@@ -24,13 +24,15 @@ export function Header({ className, showNav = true }: HeaderProps) {
       <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Image
-            src="/icons/icon.png"
-            alt="Logo"
-            width={28}
-            height={28}
-            className="rounded-md"
-          />
+          <div className="flex items-center justify-center mx-auto flex">
+            <Image
+              src="/icons/icon.png"
+              alt="Logo"
+              width={28}
+              height={28}
+              className="rounded-md"
+            />
+          </div>
           <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
         </Link>
 
