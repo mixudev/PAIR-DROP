@@ -59,12 +59,6 @@ export function Header({ className, showNav = true }: HeaderProps) {
               >
                 Gabung Room
               </Link>
-              <Link
-                href="/dashboard"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Dashboard
-              </Link>
             </nav>
           )}
           <InstallPWAButton />
