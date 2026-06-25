@@ -55,7 +55,7 @@ import { joinRoomAction } from "@/actions";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore } from "@/stores";
 import { Header } from "@/components/layouts/header";
-import { QRScannerInline } from "@/modules/rooms/components/join-room-form";
+import { QRScannerInline } from "@/components/shared/qr-scanner";
 import { toast } from "sonner";
 
 interface RoomData {

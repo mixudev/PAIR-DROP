@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { QRScannerInline } from "@/components/shared/qr-scanner";
 import { MEMBER_TOKEN_STORAGE_KEY, getRoomTokenKey } from "@/constants";
 import { useDeviceStore, useWorkspaceStore } from "@/stores";
 
@@ -168,59 +169,4 @@ export function JoinRoomForm() {
   );
 }
 
-export function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
-  const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let stopScanner: (() => Promise<void>) | null = null;
-
-    const start = async () => {
-      try {
-        const { Html5Qrcode } = await import("html5-qrcode");
-        const instance = new Html5Qrcode("qr-reader");
-        stopScanner = () => instance.stop();
-        await instance.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText: string) => {
-            instance.stop().catch(() => {});
-            onScan(decodedText);
-          },
-          undefined,
-        );
-        setScanning(true);
-        setError(null);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Camera access denied");
-        setScanning(false);
-      }
-    };
-
-    start();
-
-    return () => {
-      stopScanner?.().catch(() => {});
-    };
-  }, [onScan]);
-
-  return (
-    <div className="flex flex-col items-center gap-3 w-full">
-      <div id="qr-reader" className="w-full max-w-[300px] rounded-lg overflow-hidden" />
-      {error && (
-        <p className="text-sm text-destructive text-center">{error}</p>
-      )}
-      {!error && !scanning && (
-        <p className="text-sm text-muted-foreground">Mengakses kamera...</p>
-      )}
-      {scanning && (
-        <p className="text-sm text-muted-foreground">
-          Arahkan kamera ke QR code room
-        </p>
-      )}
-    </div>
-  );
-}
