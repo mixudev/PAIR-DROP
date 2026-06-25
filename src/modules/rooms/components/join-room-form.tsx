@@ -155,22 +155,24 @@ function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let scanner: { render: (el: string, config?: unknown) => Promise<void>; stop: () => Promise<void> } | null = null;
+    let stopScanner: (() => Promise<void>) | null = null;
 
     const start = async () => {
       try {
         const { Html5Qrcode } = await import("html5-qrcode");
-        scanner = new Html5Qrcode("qr-reader");
-        await scanner.render(
+        const instance = new Html5Qrcode("qr-reader");
+        stopScanner = () => instance.stop();
+        await instance.start(
           { facingMode: "environment" },
           {
             fps: 10,
             qrbox: { width: 250, height: 250 },
           },
           (decodedText: string) => {
-            scanner?.stop().catch(() => {});
+            instance.stop().catch(() => {});
             onScan(decodedText);
           },
+          undefined,
         );
         setScanning(true);
         setError(null);
@@ -183,7 +185,7 @@ function QRScannerInline({ onScan }: { onScan: (data: string) => void }) {
     start();
 
     return () => {
-      scanner?.stop().catch(() => {});
+      stopScanner?.().catch(() => {});
     };
   }, [onScan]);
 

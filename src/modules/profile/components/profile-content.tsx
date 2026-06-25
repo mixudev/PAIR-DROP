@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, Tag, LogOut, ChevronLeft } from "lucide-react";
+import Link from "next/link";
+import { Mail, LogOut, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/providers/auth-provider";
 import { useDeviceStore } from "@/stores";
-import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 export function ProfileContent() {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const { deviceName, setDeviceName } = useDeviceStore();
   const router = useRouter();
+  const supabase = createClient();
   const [localName, setLocalName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -24,7 +26,7 @@ export function ProfileContent() {
   }, [deviceName]);
 
   const handleSignOut = async () => {
-    await signOut();
+    await supabase.auth.signOut();
     router.push("/");
   };
 
@@ -34,7 +36,7 @@ export function ProfileContent() {
     setSaving(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
@@ -42,9 +44,7 @@ export function ProfileContent() {
     );
   }
 
-  const initials = profile?.display_name
-    ? profile.display_name.charAt(0).toUpperCase()
-    : user?.email?.charAt(0).toUpperCase() ?? "?";
+  const initials = user?.email?.charAt(0).toUpperCase() ?? "?";
 
   return (
     <div className="mx-auto max-w-lg space-y-6 p-4 pt-8">
@@ -63,7 +63,7 @@ export function ProfileContent() {
             <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
           </Avatar>
           <CardTitle className="mt-2 text-lg">
-            {profile?.display_name || "User"}
+            {user?.email ?? "User"}
           </CardTitle>
           <CardDescription>
             Manage your account information
@@ -77,24 +77,6 @@ export function ProfileContent() {
             </Label>
             <p className="text-sm">{user?.email ?? "Not available"}</p>
           </div>
-          {profile?.full_name && (
-            <div className="space-y-1">
-              <Label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
-                Full Name
-              </Label>
-              <p className="text-sm">{profile.full_name}</p>
-            </div>
-          )}
-          {profile?.provider && (
-            <div className="space-y-1">
-              <Label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Tag className="h-3 w-3" />
-                Provider
-              </Label>
-              <p className="text-sm capitalize">{profile.provider}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
