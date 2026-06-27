@@ -32,16 +32,6 @@ export function MasterRoomPage() {
 
       const result = await getRoomDataAction(roomId, token);
       if (result.success && result.data) {
-        if (result.data.room.type !== "master") {
-          setError("This is not a master room");
-          setLoading(false);
-          return;
-        }
-        if (!result.data.member.is_host) {
-          setError("Only the room master can access this page");
-          setLoading(false);
-          return;
-        }
         setRoom(result.data.room);
         setMember(result.data.member);
       } else {

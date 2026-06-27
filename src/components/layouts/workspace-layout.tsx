@@ -86,11 +86,11 @@ export function WorkspaceLayout() {
         const d = result.data;
         setRoom(d.room);
         setMember(d.member, roomId);
-        setMembers(d.members);
-        setFiles(d.files);
-        setMessages(d.messages);
-        setClipboardItems(d.clipboardItems);
-        setActivities(d.activities);
+        setMembers(d.members ?? []);
+        setFiles(d.files ?? []);
+        setMessages(d.messages ?? []);
+        setClipboardItems(d.clipboardItems ?? []);
+        setActivities(d.activities ?? []);
         // Persist token under room-specific key for future visits
         localStorage.setItem(getRoomTokenKey(roomId), d.member.access_token);
       } else {

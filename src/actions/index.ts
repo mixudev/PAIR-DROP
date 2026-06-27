@@ -504,6 +504,12 @@ export async function createMasterRoomAction(input: {
   device: { deviceId: string; deviceName: string };
 }) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "Harus login untuk membuat master room" };
+    }
+
     const service = new RoomService();
     const result = await service.createMasterRoom(
       {
@@ -571,21 +577,27 @@ export async function getMasterParticipantsAction(masterRoomId: string, accessTo
 
     const participants = await roomRepo.getParticipants(masterRoomId);
 
-    const participantsWithCounts = await Promise.all(
-      participants.map(async (p) => {
-        const [fileRes, linkRes, clipRes] = await Promise.all([
-          supabase.from("files").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id),
-          supabase.from("messages").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id).eq("type", "link"),
-          supabase.from("clipboard_items").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id),
-        ]);
-        return {
-          ...p,
-          file_count: fileRes.count ?? 0,
-          link_count: linkRes.count ?? 0,
-          clipboard_count: clipRes.count ?? 0,
-        };
-      }),
-    );
+    // Batch count queries: 3 total queries instead of N*3
+    const roomIds = participants.map((p) => p.participant_room_id);
+    const [fileRows, linkRows, clipRows] = await Promise.all([
+      supabase.from("files").select("room_id").in("room_id", roomIds),
+      supabase.from("messages").select("room_id").in("room_id", roomIds).eq("type", "link"),
+      supabase.from("clipboard_items").select("room_id").in("room_id", roomIds),
+    ]);
+
+    const fileCountMap = new Map<string, number>();
+    fileRows.data?.forEach((f) => fileCountMap.set(f.room_id, (fileCountMap.get(f.room_id) ?? 0) + 1));
+    const linkCountMap = new Map<string, number>();
+    linkRows.data?.forEach((l) => linkCountMap.set(l.room_id, (linkCountMap.get(l.room_id) ?? 0) + 1));
+    const clipCountMap = new Map<string, number>();
+    clipRows.data?.forEach((c) => clipCountMap.set(c.room_id, (clipCountMap.get(c.room_id) ?? 0) + 1));
+
+    const participantsWithCounts = participants.map((p) => ({
+      ...p,
+      file_count: fileCountMap.get(p.participant_room_id) ?? 0,
+      link_count: linkCountMap.get(p.participant_room_id) ?? 0,
+      clipboard_count: clipCountMap.get(p.participant_room_id) ?? 0,
+    }));
 
     return { success: true, data: participantsWithCounts };
   } catch (error) {

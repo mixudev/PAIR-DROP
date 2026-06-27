@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock, FileText, Link2, ClipboardCopy } from "lucide-react";
+import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock, FileText, Link2, ClipboardCopy, Maximize, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ export function MasterRoomView({ room, member }: Props) {
   const [roomName, setRoomName] = useState(room.name ?? "");
   const [roomPassword, setRoomPassword] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [qrFullscreen, setQrFullscreen] = useState(false);
 
   const roomUrl = `${env.appUrl}/master/join?roomId=${room.id}&token=${member.access_token}`;
 
@@ -167,8 +168,17 @@ export function MasterRoomView({ room, member }: Props) {
               <CardDescription>Scan QR untuk bergabung sebagai participant</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
-              <div className="rounded-xl border border-border bg-white p-4">
+              <div className="relative rounded-xl border border-border bg-white p-4">
                 <QRCodeSVG value={roomUrl} size={200} level="M" includeMargin fgColor="#171717" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 top-2 h-7 w-7"
+                  onClick={() => setQrFullscreen(true)}
+                  title="Fullscreen QR"
+                >
+                  <Maximize className="h-3.5 w-3.5" />
+                </Button>
               </div>
               <div className="w-full space-y-3">
                 <div className="space-y-1">
@@ -263,29 +273,29 @@ export function MasterRoomView({ room, member }: Props) {
                                         {activityTime}
                                       </span>
                                     )}
-                                    {hasCounts && (
-                                      <div className="mt-1 flex flex-wrap gap-1">
-                                        {p.file_count > 0 && (
-                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
-                                            <FileText className="h-3 w-3" />
-                                            {p.file_count}
-                                          </span>
-                                        )}
-                                        {p.link_count > 0 && (
-                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
-                                            <Link2 className="h-3 w-3" />
-                                            {p.link_count}
-                                          </span>
-                                        )}
-                                        {p.clipboard_count > 0 && (
-                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
-                                            <ClipboardCopy className="h-3 w-3" />
-                                            {p.clipboard_count}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
                                   </div>
+                                  {hasCounts && (
+                                    <div className="flex shrink-0 flex-wrap gap-1">
+                                      {p.file_count > 0 && (
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                                          <FileText className="h-3 w-3" />
+                                          {p.file_count}
+                                        </span>
+                                      )}
+                                      {p.link_count > 0 && (
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
+                                          <Link2 className="h-3 w-3" />
+                                          {p.link_count}
+                                        </span>
+                                      )}
+                                      {p.clipboard_count > 0 && (
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
+                                          <ClipboardCopy className="h-3 w-3" />
+                                          {p.clipboard_count}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </button>
                             );
@@ -315,6 +325,28 @@ export function MasterRoomView({ room, member }: Props) {
           )}
         </div>
       </div>
+
+      {/* QR Fullscreen Dialog */}
+      <Dialog open={qrFullscreen} onOpenChange={setQrFullscreen}>
+        <DialogContent className="flex flex-col items-center sm:max-w-md">
+          <DialogHeader className="w-full">
+            <div className="flex items-center justify-between">
+              <DialogTitle>Scan QR untuk Bergabung</DialogTitle>
+              <Button variant="ghost" size="icon" onClick={() => setQrFullscreen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="rounded-xl border border-border bg-white p-6">
+              <QRCodeSVG value={roomUrl} size={280} level="M" includeMargin fgColor="#171717" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Scan QR code ini untuk bergabung sebagai participant
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>

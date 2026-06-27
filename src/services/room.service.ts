@@ -3,7 +3,7 @@ import { ContentRepository } from "@/repositories/content.repository";
 import { FileRepository } from "@/repositories/file.repository";
 import { PairSessionRepository } from "@/repositories/pair-session.repository";
 import { RoomRepository } from "@/repositories/room.repository";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import type { CreateRoomInput, DeviceInfo } from "@/types";
 import { generateRoomCode, sanitizeInput } from "@/lib/utils";
 
@@ -233,6 +233,24 @@ export class RoomService {
       throw new Error("Room ini sudah kedaluwarsa");
     }
 
+    // For master rooms: enforce host-only access and skip unnecessary queries
+    if (room.type === "master") {
+      if (!member.is_host) throw new Error("Hanya host room yang dapat mengakses");
+
+      // Verify authenticated user matches room owner
+      if (room.created_by) {
+        const supabase = await createServerSupabaseClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || user.id !== room.created_by) {
+          throw new Error("Akses ditolak. Hanya pemilik room yang dapat mengakses halaman ini.");
+        }
+      }
+
+      await this.roomRepo.updateMemberLastSeen(member.id);
+      return { room, member };
+    }
+
+    // Regular rooms: full data
     const members = await this.roomRepo.getMembers(roomId);
 
     const supabase = createServiceRoleClient();
