@@ -25,13 +25,16 @@ import { formatDistanceToNow } from "date-fns";
 function FileItem({ file }: { file: SharedFile }) {
   const { deviceId } = useDeviceStore();
   const { memberToken, room, removeFile } = useWorkspaceStore();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   const handleDownload = async () => {
-    const result = await getFileUrlAction(file.storage_path);
+    const result = await getFileUrlAction(file.storage_path, true);
     if (result.success && result.data) {
-      window.open(result.data, "_blank");
+      const link = document.createElement("a");
+      link.href = result.data;
+      link.download = file.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       toast.error("Failed to get download link");
     }
@@ -61,12 +64,11 @@ function FileItem({ file }: { file: SharedFile }) {
     }
   };
 
-  const handlePreview = async () => {
+  const handleOpen = async () => {
     if (!isPreviewable(file.mime_type)) return;
     const result = await getFileUrlAction(file.storage_path);
     if (result.success && result.data) {
-      setPreviewUrl(result.data);
-      setShowPreview(true);
+      window.open(result.data, "_blank");
     }
   };
 
@@ -83,22 +85,9 @@ function FileItem({ file }: { file: SharedFile }) {
     >
       <div
         className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md bg-muted"
-        onClick={handlePreview}
+        onClick={handleOpen}
       >
-        {showPreview && previewUrl && isPreviewable(file.mime_type) ? (
-          file.mime_type.startsWith("image/") ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewUrl}
-              alt={file.file_name}
-              className="h-10 w-10 rounded-md object-cover"
-            />
-          ) : (
-            <ExternalLink className="h-4 w-4" />
-          )
-        ) : (
-          <FileIcon className="h-4 w-4 text-muted-foreground" />
-        )}
+        <FileIcon className="h-4 w-4 text-muted-foreground" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -111,7 +100,7 @@ function FileItem({ file }: { file: SharedFile }) {
 
       <div className="flex shrink-0 gap-1">
         {isPreviewable(file.mime_type) && (
-          <Button variant="ghost" size="icon" onClick={handlePreview}>
+          <Button variant="ghost" size="icon" onClick={handleOpen}>
             <ExternalLink className="h-4 w-4" />
           </Button>
         )}

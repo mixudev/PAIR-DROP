@@ -29,9 +29,14 @@ function FileItem({ file }: { file: SharedFile }) {
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const result = await getFileUrlAction(file.storage_path);
+      const result = await getFileUrlAction(file.storage_path, true);
       if (result.success && result.data) {
-        window.open(result.data, "_blank");
+        const link = document.createElement("a");
+        link.href = result.data;
+        link.download = file.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
         toast.error("Gagal mendapatkan URL file");
       }

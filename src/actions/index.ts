@@ -394,12 +394,12 @@ export async function getMemberByDeviceAction(
   }
 }
 
-export async function getFileUrlAction(storagePath: string) {
+export async function getFileUrlAction(storagePath: string, download?: boolean) {
   try {
     const supabase = createServiceRoleClient();
     const { data } = await supabase.storage
       .from(env.storageBucket)
-      .createSignedUrl(storagePath, 3600);
+      .createSignedUrl(storagePath, 3600, { download: download ?? false });
     return { success: true, data: data?.signedUrl ?? null };
   } catch (error) {
     return {
