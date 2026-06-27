@@ -31,12 +31,16 @@ function FileItem({ file }: { file: SharedFile }) {
     try {
       const result = await getFileUrlAction(file.storage_path, true);
       if (result.success && result.data) {
+        const response = await fetch(result.data);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = result.data;
+        link.href = blobUrl;
         link.download = file.file_name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
       } else {
         toast.error("Gagal mendapatkan URL file");
       }

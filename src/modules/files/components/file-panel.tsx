@@ -7,6 +7,7 @@ import {
   Download,
   ExternalLink,
   FileIcon,
+  Loader2,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -25,18 +26,28 @@ import { formatDistanceToNow } from "date-fns";
 function FileItem({ file }: { file: SharedFile }) {
   const { deviceId } = useDeviceStore();
   const { memberToken, room, removeFile } = useWorkspaceStore();
+  const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
-    const result = await getFileUrlAction(file.storage_path, true);
-    if (result.success && result.data) {
-      const link = document.createElement("a");
-      link.href = result.data;
-      link.download = file.file_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      toast.error("Failed to get download link");
+    setDownloading(true);
+    try {
+      const result = await getFileUrlAction(file.storage_path, true);
+      if (result.success && result.data) {
+        const response = await fetch(result.data);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = file.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        toast.error("Failed to get download link");
+      }
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -104,8 +115,8 @@ function FileItem({ file }: { file: SharedFile }) {
             <ExternalLink className="h-4 w-4" />
           </Button>
         )}
-        <Button variant="ghost" size="icon" onClick={handleDownload}>
-          <Download className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={handleDownload} disabled={downloading}>
+          {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
         </Button>
         <Button variant="ghost" size="icon" onClick={handleCopyLink}>
           <Copy className="h-4 w-4" />

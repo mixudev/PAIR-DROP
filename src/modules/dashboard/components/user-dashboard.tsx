@@ -88,6 +88,8 @@ export function UserDashboard() {
   const [passwordDialog, setPasswordDialog] = useState<{ code: string } | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [creatingMaster, setCreatingMaster] = useState(false);
+  const [masterDialogOpen, setMasterDialogOpen] = useState(false);
+  const [masterRoomName, setMasterRoomName] = useState("");
 
   const userId = user?.id;
 
@@ -157,7 +159,7 @@ export function UserDashboard() {
     setCreatingMaster(true);
     try {
       const result = await createMasterRoomAction({
-        name: "Master Room",
+        name: masterRoomName.trim() || "Master Room",
         expiryHours: 0,
         device: { deviceId, deviceName },
       });
@@ -166,6 +168,8 @@ export function UserDashboard() {
         const token = result.data.member.access_token;
         localStorage.setItem(getRoomTokenKey(roomId), token);
         localStorage.setItem(MEMBER_TOKEN_STORAGE_KEY, token);
+        setMasterDialogOpen(false);
+        setMasterRoomName("");
         toast.success("Master room created!");
         router.push(`/master-room/${roomId}`);
       } else {
@@ -174,7 +178,7 @@ export function UserDashboard() {
     } finally {
       setCreatingMaster(false);
     }
-  }, [deviceId, deviceName, router]);
+  }, [deviceId, deviceName, masterRoomName, router]);
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -203,7 +207,9 @@ export function UserDashboard() {
       } else if ("needsPassword" in result && result.needsPassword) {
         setPasswordDialog({ code: cleaned });
       } else if ("isMasterRoom" in result && result.isMasterRoom) {
-        toast.error("Room master hanya bisa diakses melalui QR code");
+        setJoinDialogOpen(false);
+        setJoinCode("");
+        router.push(`/master/join?code=${encodeURIComponent(cleaned)}`);
       } else {
         toast.error(result.error ?? "Gagal bergabung");
       }
@@ -383,15 +389,10 @@ export function UserDashboard() {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleCreateMasterRoom}
-              disabled={creatingMaster}
+              onClick={() => setMasterDialogOpen(true)}
               className="text-xs px-2"
             >
-              {creatingMaster ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin shrink-0" />
-              ) : (
-                <Monitor className="mr-1 h-3.5 w-3.5 shrink-0" />
-              )}
+              <Monitor className="mr-1 h-3.5 w-3.5 shrink-0" />
               <span className="truncate">Master</span>
             </Button>
             <Button asChild size="sm" className="text-xs px-2">
@@ -605,6 +606,50 @@ export function UserDashboard() {
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
             <QRScannerInline onScan={handleDashboardQRScan} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Master Room Name Dialog */}
+      <Dialog open={masterDialogOpen} onOpenChange={(open) => {
+        setMasterDialogOpen(open);
+        if (!open) setMasterRoomName("");
+      }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Buat Master Room
+            </DialogTitle>
+            <DialogDescription>
+              Masukkan nama room untuk memulai
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="master-room-name">Nama Room</Label>
+              <Input
+                id="master-room-name"
+                placeholder="cth: Kelas XII IPA 1"
+                value={masterRoomName}
+                onChange={(e) => setMasterRoomName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleCreateMasterRoom}
+              disabled={creatingMaster || !masterRoomName.trim()}
+            >
+              {creatingMaster ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Membuat...
+                </>
+              ) : (
+                "Buat Room"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

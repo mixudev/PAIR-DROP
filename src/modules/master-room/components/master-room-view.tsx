@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock } from "lucide-react";
+import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock, FileText, Link2, ClipboardCopy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ import { getMasterParticipantsAction, getParticipantContentAction, updateRoomAct
 import { createClient } from "@/lib/supabase/client";
 import { env } from "@/config/env";
 import { toast } from "sonner";
-import type { Room, RoomMember, MasterRoomParticipant, SharedFile, ClipboardItem, Message } from "@/types";
+import type { Room, RoomMember, MasterRoomParticipant, MasterRoomParticipantWithCounts, SharedFile, ClipboardItem, Message } from "@/types";
 
 interface ParticipantContent {
   files: SharedFile[];
@@ -36,7 +36,7 @@ interface Props {
 }
 
 export function MasterRoomView({ room, member }: Props) {
-  const [participants, setParticipants] = useState<MasterRoomParticipant[]>([]);
+  const [participants, setParticipants] = useState<MasterRoomParticipantWithCounts[]>([]);
   const [selectedParticipant, setSelectedParticipant] = useState<MasterRoomParticipant | null>(null);
   const [participantContent, setParticipantContent] = useState<ParticipantContent | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
@@ -102,7 +102,7 @@ export function MasterRoomView({ room, member }: Props) {
     setContentLoading(true);
     setParticipantContent(null);
     try {
-      const result = await getParticipantContentAction(room.id, p.device_id, member.access_token);
+      const result = await getParticipantContentAction(room.id, p.id, member.access_token);
       if (result.success && result.data) {
         setParticipantContent({
           files: result.data.files,
@@ -226,7 +226,7 @@ export function MasterRoomView({ room, member }: Props) {
                 <div className="p-2">
                   {(() => {
                     // Group by date
-                    const grouped: Record<string, MasterRoomParticipant[]> = {};
+                    const grouped: Record<string, MasterRoomParticipantWithCounts[]> = {};
                     for (const p of participants) {
                       const date = p.last_activity_at
                         ? new Date(p.last_activity_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
@@ -242,6 +242,7 @@ export function MasterRoomView({ room, member }: Props) {
                             const activityTime = p.last_activity_at
                               ? new Date(p.last_activity_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
                               : null;
+                            const hasCounts = p.file_count > 0 || p.link_count > 0 || p.clipboard_count > 0;
                             return (
                               <button
                                 key={p.id}
@@ -250,8 +251,8 @@ export function MasterRoomView({ room, member }: Props) {
                                   selectedParticipant?.id === p.id ? "bg-muted font-medium" : ""
                                 }`}
                               >
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                                <div className="flex items-start gap-2">
+                                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                                     {p.display_name.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="min-w-0 flex-1">
@@ -261,6 +262,28 @@ export function MasterRoomView({ room, member }: Props) {
                                         <Clock className="h-3 w-3" />
                                         {activityTime}
                                       </span>
+                                    )}
+                                    {hasCounts && (
+                                      <div className="mt-1 flex flex-wrap gap-1">
+                                        {p.file_count > 0 && (
+                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                                            <FileText className="h-3 w-3" />
+                                            {p.file_count}
+                                          </span>
+                                        )}
+                                        {p.link_count > 0 && (
+                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
+                                            <Link2 className="h-3 w-3" />
+                                            {p.link_count}
+                                          </span>
+                                        )}
+                                        {p.clipboard_count > 0 && (
+                                          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
+                                            <ClipboardCopy className="h-3 w-3" />
+                                            {p.clipboard_count}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 </div>

@@ -161,19 +161,32 @@ export class RoomService {
     return { room, member };
   }
 
+  async getMasterRoomByCode(code: string) {
+    const room = await this.roomRepo.findByCode(code);
+
+    if (room.type !== "master") {
+      throw new Error("Bukan room master");
+    }
+
+    if (room.expires_at && new Date(room.expires_at) < new Date()) {
+      throw new Error("Room sudah kedaluwarsa");
+    }
+
+    const members = await this.roomRepo.getMembers(room.id);
+    const hostMember = members.find((m) => m.is_host);
+    if (!hostMember) {
+      throw new Error("Host tidak ditemukan");
+    }
+
+    return { roomId: room.id, accessToken: hostMember.access_token, roomName: room.name };
+  }
+
   async joinMasterRoom(masterRoomId: string, accessToken: string, device: DeviceInfo, displayName: string) {
     // Verify the access token belongs to the master room
     const masterMember = await this.roomRepo.verifyAccess(masterRoomId, accessToken);
     if (!masterMember) throw new Error("Invalid access token");
 
-    // Check if this device already has a participant room
-    const existingParticipants = await this.roomRepo.getParticipants(masterRoomId);
-    const existing = existingParticipants.find((p) => p.device_id === device.deviceId);
-    if (existing) {
-      return { participantRoomId: existing.participant_room_id };
-    }
-
-    // Create a new room for the participant
+    // Create a new room for the participant (every join = new session)
     const participantRoom = await this.roomRepo.create({
       code: generateRoomCode(),
       name: `${displayName}'s Room`,

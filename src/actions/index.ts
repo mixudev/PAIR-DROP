@@ -525,6 +525,19 @@ export async function createMasterRoomAction(input: {
   }
 }
 
+export async function getMasterRoomByCodeAction(code: string) {
+  try {
+    const service = new RoomService();
+    const result = await service.getMasterRoomByCode(code);
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Gagal mendapatkan room",
+    };
+  }
+}
+
 export async function joinMasterRoomAction(input: {
   masterRoomId: string;
   accessToken: string;
@@ -557,7 +570,24 @@ export async function getMasterParticipantsAction(masterRoomId: string, accessTo
     if (!member) throw new Error("Unauthorized");
 
     const participants = await roomRepo.getParticipants(masterRoomId);
-    return { success: true, data: participants };
+
+    const participantsWithCounts = await Promise.all(
+      participants.map(async (p) => {
+        const [fileRes, linkRes, clipRes] = await Promise.all([
+          supabase.from("files").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id),
+          supabase.from("messages").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id).eq("type", "link"),
+          supabase.from("clipboard_items").select("id", { count: "exact", head: true }).eq("room_id", p.participant_room_id),
+        ]);
+        return {
+          ...p,
+          file_count: fileRes.count ?? 0,
+          link_count: linkRes.count ?? 0,
+          clipboard_count: clipRes.count ?? 0,
+        };
+      }),
+    );
+
+    return { success: true, data: participantsWithCounts };
   } catch (error) {
     return {
       success: false,
@@ -584,7 +614,7 @@ export async function heartbeatAction(memberId: string) {
 
 export async function getParticipantContentAction(
   masterRoomId: string,
-  participantDeviceId: string,
+  participantId: string,
   accessToken: string,
 ) {
   try {
@@ -594,7 +624,7 @@ export async function getParticipantContentAction(
     if (!member) throw new Error("Unauthorized");
 
     const participants = await roomRepo.getParticipants(masterRoomId);
-    const participant = participants.find((p) => p.device_id === participantDeviceId);
+    const participant = participants.find((p) => p.id === participantId);
     if (!participant) throw new Error("Participant not found");
 
     const masterRepo = new MasterRepository(supabase);

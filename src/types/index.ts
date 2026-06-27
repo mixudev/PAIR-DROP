@@ -121,6 +121,12 @@ export interface MasterRoomParticipant {
   last_activity_at: string | null;
 }
 
+export interface MasterRoomParticipantWithCounts extends MasterRoomParticipant {
+  file_count: number;
+  clipboard_count: number;
+  link_count: number;
+}
+
 export interface DeviceInfo {
   deviceId: string;
   deviceName: string;
