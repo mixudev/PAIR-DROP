@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock, FileText, Link2, ClipboardCopy, Maximize, X } from "lucide-react";
+import { Copy, Check, Smartphone, Users, Loader2, RefreshCw, Settings, Clock, FileText, Link2, ClipboardCopy, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,12 +330,7 @@ export function MasterRoomView({ room, member }: Props) {
       <Dialog open={qrFullscreen} onOpenChange={setQrFullscreen}>
         <DialogContent className="flex flex-col items-center sm:max-w-md">
           <DialogHeader className="w-full">
-            <div className="flex items-center justify-between">
-              <DialogTitle>Scan QR untuk Bergabung</DialogTitle>
-              <Button variant="ghost" size="icon" onClick={() => setQrFullscreen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle>Scan QR untuk Bergabung</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-6">
             <div className="rounded-xl border border-border bg-white p-6">

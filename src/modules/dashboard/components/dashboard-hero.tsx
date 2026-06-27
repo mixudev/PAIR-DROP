@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Link2, QrCode, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { JoinRoomForm } from "@/modules/rooms/components/join-room-form";
 
 const features = [
   {
@@ -28,6 +31,8 @@ const features = [
 ];
 
 export function DashboardHero() {
+  const [joinOpen, setJoinOpen] = useState(false);
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
       <motion.div
@@ -52,14 +57,18 @@ export function DashboardHero() {
               Create Pair Session
             </Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href="/room/join">
-              Join Room
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          <Button variant="outline" size="lg" onClick={() => setJoinOpen(true)}>
+            Join Room
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </motion.div>
+
+      <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
+        <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent shadow-none">
+          <JoinRoomForm />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {features.map((feature, i) => (

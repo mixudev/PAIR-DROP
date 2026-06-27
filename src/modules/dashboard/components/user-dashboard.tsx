@@ -630,7 +630,7 @@ export function UserDashboard() {
               <Label htmlFor="master-room-name">Nama Room</Label>
               <Input
                 id="master-room-name"
-                placeholder="cth: Kelas XII IPA 1"
+                placeholder="master-xxxx"
                 value={masterRoomName}
                 onChange={(e) => setMasterRoomName(e.target.value)}
                 autoFocus
